@@ -1,0 +1,326 @@
+<head>
+    <title>SSHINO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(40, 40, 40, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo h1 {
+            font-size: 2.5rem;
+            color: #00ff88;
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .logo p {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .input-container {
+            position: relative;
+        }
+        
+        .input-container .icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        input[type="text"], input[type="password"], input[type="number"] {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            background: rgba(50, 50, 50, 0.8);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+        }
+        
+        .toggle-section {
+            background: rgba(30, 30, 30, 0.5);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .toggle-title {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #00ff88;
+        }
+        
+        .radio-item label {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        .advanced-toggle {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .advanced-btn {
+            background: none;
+            border: none;
+            color: #00ff88;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+        
+        .advanced-btn:hover {
+            color: #00cc6a;
+        }
+        
+        .advanced-options {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 255, 136, 0.3);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .logo h1 {
+                font-size: 2rem;
+            }
+            
+            input[type="text"], input[type="password"], input[type="number"] {
+                padding: 12px 12px 12px 40px;
+            }
+            
+            .login-btn {
+                padding: 12px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<html>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>🔐 SSHINO</h1>
+            <p>آمن • سريع • موثوق</p>
+        </div>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label for="host">🖥️ عنوان الخادم</label>
+                <div class="input-container">
+                    <span class="icon">🌐</span>
+                    <input type="text" name="host" id="host" placeholder="192.168.1.100">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="port">🔌 المنفذ</label>
+                <div class="input-container">
+                    <span class="icon">#</span>
+                    <input type="number" name="port" id="port" value="22" placeholder="22">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="username">👤 اسم المستخدم</label>
+                <div class="input-container">
+                    <span class="icon">👨‍💻</span>
+                    <input type="text" name="username" id="username" placeholder="root">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="userpassword">🔑 كلمة المرور</label>
+                <div class="input-container">
+                    <span class="icon">🔒</span>
+                    <input type="password" name="userpassword" id="userpassword" placeholder="••••••••">
+                </div>
+            </div>
+            
+            <div class="advanced-toggle">
+                <button type="button" class="advanced-btn" onclick="toggleAdvanced()">⚙️ إعدادات متقدمة</button>
+            </div>
+            
+            <div class="advanced-options" id="advancedOptions">
+                <div class="form-group">
+                    <label for="header">📝 نص الرأس</label>
+                    <div class="input-container">
+                        <span class="icon">📄</span>
+                        <input type="text" name="header" id="header" value="SSHINO" placeholder="SSHINO">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="headerBackground">🎨 لون خلفية الرأس</label>
+                    <div class="input-container">
+                        <span class="icon">🎨</span>
+                        <input type="text" name="headerBackground" id="headerBackground" value="black" placeholder="black">
+                    </div>
+                </div>
+                
+                <div class="toggle-section">
+                    <div class="toggle-title">💫 وميض المؤشر</div>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" id="false" name="cursorBlink" value="false" checked>
+                            <label for="false">إيقاف</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" id="true" name="cursorBlink" value="true">
+                            <label for="true">تشغيل</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="login-btn">🚀 اتصال آمن</button>
+        </form>
+    </div>
+    <script>
+        const form = document.querySelector('form');
+        const hostInput = document.querySelector('input[name="host"]');
+        hostInput.value = '127.0.0.1';
+        
+        function toggleAdvanced() {
+            const advancedOptions = document.getElementById('advancedOptions');
+            const btn = document.querySelector('.advanced-btn');
+            
+            if (advancedOptions.style.display === 'none' || advancedOptions.style.display === '') {
+                advancedOptions.style.display = 'block';
+                btn.innerHTML = '⚙️ إخفاء الإعدادات المتقدمة';
+            } else {
+                advancedOptions.style.display = 'none';
+                btn.innerHTML = '⚙️ إعدادات متقدمة';
+            }
+        }
+        
+        form.addEventListener('submit', (e) => {
+            const host = hostInput.value || '127.0.0.1';
+            form.action = `/ssh/host/${host}`;
+            
+            // Add loading state to button
+            const loginBtn = document.querySelector('.login-btn');
+            loginBtn.innerHTML = '🔄 جاري الاتصال...';
+            loginBtn.disabled = true;
+        });
+        
+        // Add input validation and styling
+        const inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="number"]');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
