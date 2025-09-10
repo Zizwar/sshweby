@@ -31,6 +31,9 @@ let currentDate: Date;
 let myFile: string;
 let errorExists: boolean;
 const term = new Terminal();
+// Make term available globally for mobile keyboard functions in HTML
+(window as any).term = term;
+
 // DOM properties
 const logBtn = document.getElementById('logBtn');
 const credentialsBtn = document.getElementById('credentialsBtn');
@@ -152,95 +155,131 @@ function resizeScreen() {
 
 window.addEventListener('resize', resizeScreen, false);
 
-// Mobile keys
-const keyEsc = document.getElementById('key-esc');
-const keyCtrl = document.getElementById('key-ctrl');
-const keyAlt = document.getElementById('key-alt');
-const keyTab = document.getElementById('key-tab');
-const keyUp = document.getElementById('key-up');
-const keyDown = document.getElementById('key-down');
-const keyLeft = document.getElementById('key-left');
-const keyRight = document.getElementById('key-right');
-
+// Mobile keys integration with the new HTML structure
 let ctrlActive = false;
 let altActive = false;
 
-keyEsc.addEventListener('click', () => {
-  socket.emit('data', '\x1b');
-  term.focus();
-});
+// Function to handle mobile keyboard events
+function setupMobileKeyHandlers() {
+  // Set up handlers for all key buttons created dynamically in the HTML
+  const keyButtons = document.querySelectorAll('.key-btn');
+  
+  keyButtons.forEach((button: any) => {
+    // Skip if already has event listener
+    if (button.hasAttribute('data-handler-set')) return;
+    button.setAttribute('data-handler-set', 'true');
+    
+    button.addEventListener('click', (e: Event) => {
+      e.preventDefault();
+      
+      const target = e.target as HTMLElement;
+      const key = target.dataset.key;
+      const char = target.dataset.char;
+      
+      // Handle special keys
+      if (key) {
+        switch (key) {
+          case 'Escape':
+            socket.emit('data', '\x1b');
+            break;
+          case 'Tab':
+            socket.emit('data', '\t');
+            break;
+          case 'ArrowUp':
+            socket.emit('data', '\x1b[A');
+            break;
+          case 'ArrowDown':
+            socket.emit('data', '\x1b[B');
+            break;
+          case 'ArrowLeft':
+            socket.emit('data', '\x1b[D');
+            break;
+          case 'ArrowRight':
+            socket.emit('data', '\x1b[C');
+            break;
+          case 'Enter':
+            socket.emit('data', '\r');
+            break;
+          case 'Backspace':
+            socket.emit('data', '\b');
+            break;
+          case 'Control':
+            ctrlActive = !ctrlActive;
+            altActive = false;
+            target.classList.toggle('active', ctrlActive);
+            // Remove active from alt buttons
+            document.querySelectorAll('[data-key="Alt"]').forEach(btn => btn.classList.remove('active'));
+            break;
+          case 'Alt':
+            altActive = !altActive;
+            ctrlActive = false;
+            target.classList.toggle('active', altActive);
+            // Remove active from ctrl buttons
+            document.querySelectorAll('[data-key="Control"]').forEach(btn => btn.classList.remove('active'));
+            break;
+        }
+      }
+      
+      // Handle character keys
+      if (char && !key) {
+        let charToSend = char;
+        if (char === '___') charToSend = ' '; // Space key
+        
+        if (ctrlActive) {
+          switch (charToSend.toLowerCase()) {
+            case 'c':
+              socket.emit('data', '\x03');
+              break;
+            case 'a':
+              socket.emit('data', '\x01');
+              break;
+            case 'x':
+              socket.emit('data', '\x18');
+              break;
+            case 'v':
+              socket.emit('data', '\x16');
+              break;
+            case 'z':
+              socket.emit('data', '\x1a');
+              break;
+            case 'd':
+              socket.emit('data', '\x04');
+              break;
+            default:
+              socket.emit('data', charToSend);
+          }
+          // Reset ctrl after use
+          ctrlActive = false;
+          document.querySelectorAll('[data-key="Control"]').forEach(btn => btn.classList.remove('active'));
+        } else if (altActive) {
+          socket.emit('data', '\x1b' + charToSend);
+          // Reset alt after use
+          altActive = false;
+          document.querySelectorAll('[data-key="Alt"]').forEach(btn => btn.classList.remove('active'));
+        } else {
+          socket.emit('data', charToSend);
+        }
+      }
+      
+      term.focus();
+    });
+  });
+}
 
-keyTab.addEventListener('click', () => {
-  socket.emit('data', '\t');
-  term.focus();
-});
+// Initialize mobile keyboard on DOM ready
+document.addEventListener('DOMContentLoaded', setupMobileKeyHandlers);
 
-keyUp.addEventListener('click', () => {
-  socket.emit('data', '\x1b[A');
-  term.focus();
-});
-
-keyDown.addEventListener('click', () => {
-  socket.emit('data', '\x1b[B');
-  term.focus();
-});
-
-keyLeft.addEventListener('click', () => {
-  socket.emit('data', '\x1b[D');
-  term.focus();
-});
-
-keyRight.addEventListener('click', () => {
-  socket.emit('data', '\x1b[C');
-  term.focus();
-});
-
-keyCtrl.addEventListener('click', () => {
-  ctrlActive = !ctrlActive;
-  altActive = false;
-  keyCtrl.classList.toggle('active', ctrlActive);
-  keyAlt.classList.remove('active');
-  term.focus();
-});
-
-keyAlt.addEventListener('click', () => {
-  altActive = !altActive;
-  ctrlActive = false;
-  keyAlt.classList.toggle('active', altActive);
-  keyCtrl.classList.remove('active');
-  term.focus();
-});
+// Also set up when the page loads (in case DOMContentLoaded already fired)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupMobileKeyHandlers);
+} else {
+  setupMobileKeyHandlers();
+}
 
 term.onData((data) => {
-  if (ctrlActive) {
-    switch (data) {
-      case 'c':
-        socket.emit('data', '\x03'); // Ctrl+C
-        break;
-      case 'a':
-        socket.emit('data', '\x01'); // Ctrl+A
-        break;
-      case 'x':
-        socket.emit('data', '\x18'); // Ctrl+X
-        break;
-      case 'v':
-        socket.emit('data', '\x16'); // Ctrl+V
-        break;
-      case 'z':
-        socket.emit('data', '\x1a'); // Ctrl+Z
-        break;
-      default:
-        socket.emit('data', data);
-    }
-    ctrlActive = false;
-    keyCtrl.classList.remove('active');
-  } else if (altActive) {
-    socket.emit('data', '\x1b' + data);
-    altActive = false;
-    keyAlt.classList.remove('active');
-  } else {
-    socket.emit('data', data);
-  }
+  // Handle regular terminal input
+  // The mobile keyboard is handled separately in setupMobileKeyHandlers
+  socket.emit('data', data);
 });
 
 socket.on('data', (data: string | Uint8Array) => {

@@ -1,35 +1,229 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>WebSSH2</title>
+  <title>SSHINO Terminal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <style>
-    html, body {background-color: #000;height: 100%;margin: 0;}.dropup-content {display: none;}
+    html, body {
+      background-color: #000;
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      touch-action: pan-x pan-y;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+    .dropup-content {display: none;}
+    
+    /* Hide mobile keyboard buttons initially */
+    #mobile-keys {
+      transform: translateY(100%);
+      transition: transform 0.3s ease-in-out;
+    }
+    
+    #mobile-keys.visible {
+      transform: translateY(0);
+    }
+    
+    /* Mobile keyboard toggle button */
+    #keyboard-toggle {
+      position: fixed;
+      bottom: 25px;
+      right: 15px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00ff88, #00cc6a);
+      border: none;
+      color: #000;
+      font-size: 1.2rem;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+      cursor: pointer;
+      z-index: 1000;
+      transition: all 0.3s ease;
+      display: none;
+    }
+    
+    #keyboard-toggle:active {
+      transform: scale(0.95);
+    }
+    
+    /* Show keyboard toggle on mobile */
+    @media (max-width: 768px), (pointer: coarse) {
+      #keyboard-toggle {
+        display: block;
+      }
+    }
+    
+    /* Font size controls */
+    #font-controls {
+      position: fixed;
+      top: 45px;
+      right: 15px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 999;
+    }
+    
+    #font-controls.visible {
+      display: flex;
+    }
+    
+    .font-control-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(40, 40, 40, 0.95);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      color: #00ff88;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .font-control-btn:active {
+      background: rgba(0, 255, 136, 0.2);
+      transform: scale(0.95);
+    }
+    
+    /* Quick actions for mobile */
+    #quick-actions {
+      position: fixed;
+      bottom: 90px;
+      right: 15px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 999;
+    }
+    
+    #quick-actions.visible {
+      display: flex;
+    }
+    
+    .quick-action-btn {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: rgba(40, 40, 40, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #00ff88;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    
+    .quick-action-btn:active {
+      background: rgba(60, 60, 60, 0.95);
+      transform: scale(0.95);
+    }
+    
+    /* Improved bottom bar for mobile */
+    #bottomdiv {
+      padding: 5px 10px;
+      font-size: 0.85rem;
+    }
+    
+    @media (max-width: 768px) {
+      #bottomdiv {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+        height: 22px;
+      }
+      
+      #menu {
+        font-size: 0.85rem;
+      }
+      
+      .dropup-content {
+        font-size: 0.85rem;
+        min-width: 140px;
+      }
+      
+      .dropup-content a {
+        padding: 8px 12px;
+      }
+      
+      #font-controls {
+        display: flex;
+      }
+    }
   </style>
   <link rel="stylesheet" href="/ssh/webssh2.css" />
   <link rel="icon" href="/ssh/favicon.ico" />
 </head>
-<body>
+<body class="terminal-font-md">
   <div class="box">
     <div id="header"></div>
     <div id="terminal-container" class="terminal"></div>
-<div id="mobile-keys">
-    <button id="key-esc">ESC</button>
-    <button id="key-ctrl">CTRL</button>
-    <button id="key-alt">ALT</button>
-    <button id="key-tab">TAB</button>
-    <button id="key-up">&uarr;</button>
-    <button id="key-down">&darr;</button>
-    <button id="key-left">&larr;</button>
-    <button id="key-right">&rarr;</button>
-</div>
+    
+    <!-- Mobile keyboard toggle button -->
+    <button id="keyboard-toggle" onclick="toggleMobileKeyboard()" title="إظهار/إخفاء لوحة المفاتيح">⌨️</button>
+    
+    <!-- Font size controls -->
+    <div id="font-controls">
+      <button class="font-control-btn" onclick="decreaseFontSize()" title="تصغير النص">A-</button>
+      <button class="font-control-btn" onclick="increaseFontSize()" title="تكبير النص">A+</button>
+      <button class="font-control-btn" onclick="resetFontSize()" title="إعادة تعيين النص">A</button>
+    </div>
+    
+    <!-- Quick actions for mobile -->
+    <div id="quick-actions">
+      <button class="quick-action-btn" onclick="sendCtrlC()" title="إلغاء العملية">✕</button>
+      <button class="quick-action-btn" onclick="clearScreen()" title="مسح الشاشة">🧹</button>
+      <button class="quick-action-btn" onclick="toggleFullscreen()" title="ملء الشاشة">⛶</button>
+      <button class="quick-action-btn" onclick="showConnectionInfo()" title="معلومات الاتصال">ℹ️</button>
+    </div>
+    
+    <!-- Enhanced mobile keys -->
+    <div id="mobile-keys">
+      <div class="key-row">
+        <button class="key-btn special" data-key="Escape" title="مفتاح الهروب">ESC</button>
+        <button class="key-btn special modifier" data-key="Control" title="تحكم">CTRL</button>
+        <button class="key-btn special modifier" data-key="Alt" title="بديل">ALT</button>
+        <button class="key-btn special" data-key="Tab" title="جدولة">TAB</button>
+        <button class="key-btn" data-char="|" title="أنبوب">|</button>
+        <button class="key-btn" data-char="~" title="تيلدا">~</button>
+      </div>
+      <div class="key-row">
+        <button class="key-btn arrow" data-key="ArrowUp" title="أعلى">↑</button>
+        <button class="key-btn arrow" data-key="ArrowDown" title="أسفل">↓</button>
+        <button class="key-btn arrow" data-key="ArrowLeft" title="يسار">←</button>
+        <button class="key-btn arrow" data-key="ArrowRight" title="يمين">→</button>
+        <button class="key-btn" data-char="/" title="شرطة مائلة">/</button>
+        <button class="key-btn" data-char="-" title="شرطة">-</button>
+      </div>
+      <div class="key-row">
+        <button class="key-btn" data-key="Enter" title="إدخال">⏎</button>
+        <button class="key-btn" data-key="Backspace" title="مسح">⌫</button>
+        <button class="key-btn" data-char=" " title="مسافة">___</button>
+        <button class="key-btn" data-char="." title="نقطة">.</button>
+        <button class="key-btn" data-char=":" title="نقطتان">:</button>
+        <button class="key-btn hide-keyboard" onclick="toggleMobileKeyboard()" title="إخفاء">✕</button>
+      </div>
+    </div>
+    
     <div id="bottomdiv">
       <div class="dropup" id="menu">
-        <i class="fas fa-bars fa-fw"></i> Menu
+        <i class="fas fa-bars fa-fw"></i> القائمة
         <div id="dropupContent" class="dropup-content">
-          <a id="logBtn"><i class="fas fa-clipboard fa-fw"></i> Start Log</a>
-          <a id="downloadLogBtn"><i class="fas fa-download fa-fw"></i> Download Log</a>
-          <a id="reauthBtn" style="display: none;"><i class="fas fa-key fa-fw"></i> Switch User</a>
-          <a id="credentialsBtn" style="display: none;"><i class="fas fa-key fa-fw"></i> Credentials</a>
+          <a id="logBtn"><i class="fas fa-clipboard fa-fw"></i> بدء السجل</a>
+          <a id="downloadLogBtn"><i class="fas fa-download fa-fw"></i> تحميل السجل</a>
+          <a id="reauthBtn" style="display: none;"><i class="fas fa-key fa-fw"></i> تغيير المستخدم</a>
+          <a id="credentialsBtn" style="display: none;"><i class="fas fa-key fa-fw"></i> بيانات الاعتماد</a>
         </div>
       </div>
       <div id="footer"></div>
@@ -37,6 +231,231 @@
       <div id="countdown"></div>
     </div>
   </div>
+  
+  <script>
+    let mobileKeyboardVisible = false;
+    let quickActionsVisible = false;
+    let modifierPressed = {};
+    let currentFontSize = 'md';
+    const fontSizes = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl'];
+    
+    function toggleMobileKeyboard() {
+      const mobileKeys = document.getElementById('mobile-keys');
+      const keyboardToggle = document.getElementById('keyboard-toggle');
+      
+      mobileKeyboardVisible = !mobileKeyboardVisible;
+      
+      if (mobileKeyboardVisible) {
+        mobileKeys.classList.add('visible');
+        keyboardToggle.innerHTML = '✕';
+        keyboardToggle.style.background = 'linear-gradient(135deg, #ff4444, #cc3333)';
+      } else {
+        mobileKeys.classList.remove('visible');
+        keyboardToggle.innerHTML = '⌨️';
+        keyboardToggle.style.background = 'linear-gradient(135deg, #00ff88, #00cc6a)';
+        resetModifiers();
+      }
+      updateBodyClass();
+    }
+    
+    function toggleQuickActions() {
+      const quickActions = document.getElementById('quick-actions');
+      quickActionsVisible = !quickActionsVisible;
+      
+      if (quickActionsVisible) {
+        quickActions.classList.add('visible');
+      } else {
+        quickActions.classList.remove('visible');
+      }
+    }
+    
+    function resetModifiers() {
+      modifierPressed = {};
+      document.querySelectorAll('.modifier').forEach(btn => {
+        btn.classList.remove('active');
+      });
+    }
+    
+    function sendCtrlC() {
+      if (window.term) {
+        window.term.write('\u0003');
+      }
+    }
+    
+    function clearScreen() {
+      if (window.term) {
+        window.term.write('\u000C');
+      }
+    }
+    
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    
+    function showConnectionInfo() {
+      const status = document.getElementById('status');
+      if (status) {
+        alert('معلومات الاتصال:\n' + status.textContent);
+      }
+    }
+    
+    // Font size control functions
+    function increaseFontSize() {
+      const currentIndex = fontSizes.indexOf(currentFontSize);
+      if (currentIndex < fontSizes.length - 1) {
+        currentFontSize = fontSizes[currentIndex + 1];
+        updateFontSize();
+        vibrate(20);
+      }
+    }
+    
+    function decreaseFontSize() {
+      const currentIndex = fontSizes.indexOf(currentFontSize);
+      if (currentIndex > 0) {
+        currentFontSize = fontSizes[currentIndex - 1];
+        updateFontSize();
+        vibrate(20);
+      }
+    }
+    
+    function resetFontSize() {
+      currentFontSize = 'md';
+      updateFontSize();
+      vibrate(30);
+    }
+    
+    function updateFontSize() {
+      document.body.className = document.body.className.replace(/terminal-font-\w+/g, '');
+      document.body.classList.add('terminal-font-' + currentFontSize);
+      
+      // Trigger terminal resize if available
+      setTimeout(() => {
+        if (window.term && window.term.fit) {
+          window.term.fit();
+        }
+      }, 100);
+    }
+    
+    // Handle keyboard visibility for better terminal sizing
+    function updateBodyClass() {
+      if (mobileKeyboardVisible) {
+        document.body.classList.add('keyboard-visible');
+      } else {
+        document.body.classList.remove('keyboard-visible');
+      }
+    }
+    
+    // Long press on keyboard toggle shows quick actions
+    let longPressTimer;
+    document.getElementById('keyboard-toggle').addEventListener('touchstart', function(e) {
+      longPressTimer = setTimeout(() => {
+        toggleQuickActions();
+        navigator.vibrate && navigator.vibrate(50);
+      }, 500);
+    });
+    
+    document.getElementById('keyboard-toggle').addEventListener('touchend', function(e) {
+      clearTimeout(longPressTimer);
+    });
+    
+    // Mobile keyboard functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const keyButtons = document.querySelectorAll('.key-btn');
+      
+      keyButtons.forEach(button => {
+        button.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          this.classList.add('active');
+          
+          if (this.classList.contains('modifier')) {
+            const key = this.dataset.key;
+            if (modifierPressed[key]) {
+              modifierPressed[key] = false;
+              this.classList.remove('active');
+            } else {
+              modifierPressed[key] = true;
+            }
+            return;
+          }
+          
+          if (window.term) {
+            if (this.dataset.char) {
+              let char = this.dataset.char;
+              if (char === '___') char = ' ';
+              
+              if (modifierPressed.Control) {
+                if (char === 'c') char = '\u0003';
+                if (char === 'z') char = '\u001A';
+                if (char === 'd') char = '\u0004';
+              }
+              
+              window.term.write(char);
+            } else if (this.dataset.key) {
+              const keyEvent = new KeyboardEvent('keydown', {
+                key: this.dataset.key,
+                ctrlKey: modifierPressed.Control || false,
+                altKey: modifierPressed.Alt || false
+              });
+              window.term._core._inputHandler.onKeyDown(keyEvent);
+            }
+          }
+          
+          if (!this.classList.contains('modifier')) {
+            resetModifiers();
+          }
+        });
+        
+        button.addEventListener('touchend', function(e) {
+          e.preventDefault();
+          if (!this.classList.contains('modifier')) {
+            this.classList.remove('active');
+          }
+        });
+      });
+    });
+    
+    // Handle orientation change
+    window.addEventListener('orientationchange', function() {
+      setTimeout(() => {
+        if (window.term && window.term.fit) {
+          window.term.fit();
+        }
+        updateBodyClass();
+      }, 500);
+    });
+    
+    // Double tap to toggle fullscreen on terminal
+    let lastTap = 0;
+    document.getElementById('terminal-container').addEventListener('touchend', function(e) {
+      const currentTime = new Date().getTime();
+      const tapLength = currentTime - lastTap;
+      
+      if (tapLength < 500 && tapLength > 0) {
+        toggleFullscreen();
+        e.preventDefault();
+      }
+      lastTap = currentTime;
+    });
+    
+    // Haptic feedback function
+    function vibrate(pattern = 10) {
+      if (navigator.vibrate) {
+        navigator.vibrate(pattern);
+      }
+    }
+    
+    // Add vibration to button presses
+    document.addEventListener('touchstart', function(e) {
+      if (e.target.matches('.key-btn, .quick-action-btn, #keyboard-toggle, .font-control-btn')) {
+        vibrate(10);
+      }
+    });
+  </script>
+  
 <script src="/ssh/webssh2.bundle.js" defer></script>
 </body>
 </html>
