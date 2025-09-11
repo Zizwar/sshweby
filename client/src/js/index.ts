@@ -282,6 +282,9 @@ term.onData((data) => {
   socket.emit('data', data);
 });
 
+// Make socket globally available for Android keyboard integration
+(window as any).socket = socket;
+
 socket.on('data', (data: string | Uint8Array) => {
   term.write(data);
   if (sessionLogEnable) {

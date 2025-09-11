@@ -20,14 +20,87 @@
     }
     .dropup-content {display: none;}
     
-    /* Hide mobile keyboard buttons initially */
+    /* Enhanced mobile keys - Full keyboard layout */
     #mobile-keys {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+      border-top: 2px solid rgba(0, 255, 136, 0.3);
+      padding: 10px 8px;
       transform: translateY(100%);
       transition: transform 0.3s ease-in-out;
+      z-index: 2000;
+      max-height: 50vh;
+      overflow-y: auto;
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
     }
     
     #mobile-keys.visible {
       transform: translateY(0);
+    }
+    
+    .key-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+    
+    .key-btn {
+      min-width: 35px;
+      height: 40px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #404040, #2a2a2a);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 8px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .key-btn:active, .key-btn.active {
+      background: linear-gradient(135deg, #00ff88, #00cc6a);
+      color: #000;
+      transform: scale(0.95);
+      box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+    }
+    
+    .key-btn.special {
+      background: linear-gradient(135deg, #0066cc, #004499);
+      min-width: 45px;
+    }
+    
+    .key-btn.modifier {
+      background: linear-gradient(135deg, #cc6600, #994400);
+    }
+    
+    .key-btn.arrow {
+      background: linear-gradient(135deg, #6600cc, #440099);
+      width: 40px;
+    }
+    
+    .key-btn.wide {
+      flex: 1;
+      min-width: 60px;
+    }
+    
+    .keyboard-label {
+      text-align: center;
+      color: #00ff88;
+      font-size: 0.8rem;
+      margin-bottom: 5px;
+      font-weight: bold;
     }
     
     /* Mobile keyboard toggle button */
@@ -161,6 +234,57 @@
         display: flex;
       }
     }
+    
+    /* Font size override for better control */
+    body.terminal-font-xs .terminal, 
+    body.terminal-font-xs #terminal-container .terminal,
+    body.terminal-font-xs .xterm { font-size: 10px !important; }
+    
+    body.terminal-font-sm .terminal, 
+    body.terminal-font-sm #terminal-container .terminal,
+    body.terminal-font-sm .xterm { font-size: 12px !important; }
+    
+    body.terminal-font-md .terminal, 
+    body.terminal-font-md #terminal-container .terminal,
+    body.terminal-font-md .xterm { font-size: 14px !important; }
+    
+    body.terminal-font-lg .terminal, 
+    body.terminal-font-lg #terminal-container .terminal,
+    body.terminal-font-lg .xterm { font-size: 16px !important; }
+    
+    body.terminal-font-xl .terminal, 
+    body.terminal-font-xl #terminal-container .terminal,
+    body.terminal-font-xl .xterm { font-size: 18px !important; }
+    
+    body.terminal-font-xxl .terminal, 
+    body.terminal-font-xxl #terminal-container .terminal,
+    body.terminal-font-xxl .xterm { font-size: 20px !important; }
+    
+    @media (max-width: 768px) {
+      body.terminal-font-xs .terminal, 
+      body.terminal-font-xs #terminal-container .terminal,
+      body.terminal-font-xs .xterm { font-size: 8px !important; }
+      
+      body.terminal-font-sm .terminal, 
+      body.terminal-font-sm #terminal-container .terminal,
+      body.terminal-font-sm .xterm { font-size: 10px !important; }
+      
+      body.terminal-font-md .terminal, 
+      body.terminal-font-md #terminal-container .terminal,
+      body.terminal-font-md .xterm { font-size: 12px !important; }
+      
+      body.terminal-font-lg .terminal, 
+      body.terminal-font-lg #terminal-container .terminal,
+      body.terminal-font-lg .xterm { font-size: 14px !important; }
+      
+      body.terminal-font-xl .terminal, 
+      body.terminal-font-xl #terminal-container .terminal,
+      body.terminal-font-xl .xterm { font-size: 16px !important; }
+      
+      body.terminal-font-xxl .terminal, 
+      body.terminal-font-xxl #terminal-container .terminal,
+      body.terminal-font-xxl .xterm { font-size: 18px !important; }
+    }
   </style>
   <link rel="stylesheet" href="/ssh/webssh2.css" />
   <link rel="icon" href="/ssh/favicon.ico" />
@@ -180,39 +304,106 @@
       <button class="font-control-btn" onclick="resetFontSize()" title="إعادة تعيين النص">A</button>
     </div>
     
+    <!-- Hidden input for Android keyboard -->
+    <input type="text" id="android-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text" style="position: absolute; left: -9999px; opacity: 0; pointer-events: none; z-index: -1;">
+
     <!-- Quick actions for mobile -->
     <div id="quick-actions">
+      <button class="quick-action-btn" onclick="useAndroidKeyboard()" title="لوحة مفاتيح الأندرويد">📱</button>
       <button class="quick-action-btn" onclick="sendCtrlC()" title="إلغاء العملية">✕</button>
       <button class="quick-action-btn" onclick="clearScreen()" title="مسح الشاشة">🧹</button>
       <button class="quick-action-btn" onclick="toggleFullscreen()" title="ملء الشاشة">⛶</button>
       <button class="quick-action-btn" onclick="showConnectionInfo()" title="معلومات الاتصال">ℹ️</button>
     </div>
     
-    <!-- Enhanced mobile keys -->
+    <!-- Enhanced mobile keys - Complete keyboard -->
     <div id="mobile-keys">
+      <div class="keyboard-label">⌨️ لوحة المفاتيح المخصصة</div>
+      
+      <!-- Function Keys Row -->
       <div class="key-row">
         <button class="key-btn special" data-key="Escape" title="مفتاح الهروب">ESC</button>
+        <button class="key-btn special" data-key="Tab" title="جدولة">TAB</button>
         <button class="key-btn special modifier" data-key="Control" title="تحكم">CTRL</button>
         <button class="key-btn special modifier" data-key="Alt" title="بديل">ALT</button>
-        <button class="key-btn special" data-key="Tab" title="جدولة">TAB</button>
-        <button class="key-btn" data-char="|" title="أنبوب">|</button>
-        <button class="key-btn" data-char="~" title="تيلدا">~</button>
+        <button class="key-btn special" data-key="Backspace" title="مسح">⌫</button>
       </div>
+      
+      <!-- Numbers Row -->
+      <div class="key-row">
+        <button class="key-btn" data-char="1">1</button>
+        <button class="key-btn" data-char="2">2</button>
+        <button class="key-btn" data-char="3">3</button>
+        <button class="key-btn" data-char="4">4</button>
+        <button class="key-btn" data-char="5">5</button>
+        <button class="key-btn" data-char="6">6</button>
+        <button class="key-btn" data-char="7">7</button>
+        <button class="key-btn" data-char="8">8</button>
+        <button class="key-btn" data-char="9">9</button>
+        <button class="key-btn" data-char="0">0</button>
+      </div>
+      
+      <!-- Special Characters Row 1 -->
+      <div class="key-row">
+        <button class="key-btn" data-char="`" title="backtick">`</button>
+        <button class="key-btn" data-char="@" title="at">@</button>
+        <button class="key-btn" data-char="#" title="hash">#</button>
+        <button class="key-btn" data-char="$" title="dollar">$</button>
+        <button class="key-btn" data-char="%" title="percent">%</button>
+        <button class="key-btn" data-char="&" title="ampersand">&</button>
+        <button class="key-btn" data-char="*" title="asterisk">*</button>
+        <button class="key-btn" data-char="!" title="exclamation">!</button>
+      </div>
+      
+      <!-- Special Characters Row 2 -->
+      <div class="key-row">
+        <button class="key-btn" data-char="|" title="pipe">|</button>
+        <button class="key-btn" data-char="~" title="tilde">~</button>
+        <button class="key-btn" data-char="/" title="slash">/</button>
+        <button class="key-btn" data-char="-" title="dash">-</button>
+        <button class="key-btn" data-char="_" title="underscore">_</button>
+        <button class="key-btn" data-char="=" title="equals">=</button>
+        <button class="key-btn" data-char="+" title="plus">+</button>
+        <button class="key-btn" data-char="^" title="caret">^</button>
+      </div>
+      
+      <!-- Brackets & Quotes Row -->
+      <div class="key-row">
+        <button class="key-btn" data-char="(" title="open parenthesis">(</button>
+        <button class="key-btn" data-char=")" title="close parenthesis">)</button>
+        <button class="key-btn" data-char="[" title="open bracket">[</button>
+        <button class="key-btn" data-char="]" title="close bracket">]</button>
+        <button class="key-btn" data-char="{" title="open brace">{</button>
+        <button class="key-btn" data-char="}" title="close brace">}</button>
+        <button class="key-btn" data-char='"' title="double quote">"</button>
+        <button class="key-btn" data-char="'" title="single quote">'</button>
+      </div>
+      
+      <!-- Punctuation Row -->
+      <div class="key-row">
+        <button class="key-btn" data-char="." title="dot">.</button>
+        <button class="key-btn" data-char="," title="comma">,</button>
+        <button class="key-btn" data-char=":" title="colon">:</button>
+        <button class="key-btn" data-char=";" title="semicolon">;</button>
+        <button class="key-btn" data-char="?" title="question">?</button>
+        <button class="key-btn" data-char="<" title="less than"><</button>
+        <button class="key-btn" data-char=">" title="greater than">></button>
+        <button class="key-btn" data-char="\\" title="backslash">\</button>
+      </div>
+      
+      <!-- Navigation & Actions Row -->
       <div class="key-row">
         <button class="key-btn arrow" data-key="ArrowUp" title="أعلى">↑</button>
         <button class="key-btn arrow" data-key="ArrowDown" title="أسفل">↓</button>
         <button class="key-btn arrow" data-key="ArrowLeft" title="يسار">←</button>
         <button class="key-btn arrow" data-key="ArrowRight" title="يمين">→</button>
-        <button class="key-btn" data-char="/" title="شرطة مائلة">/</button>
-        <button class="key-btn" data-char="-" title="شرطة">-</button>
+        <button class="key-btn special" data-key="Enter" title="إدخال">⏎</button>
+        <button class="key-btn wide" data-char=" " title="مسافة">مسافة</button>
       </div>
+      
+      <!-- Close Button -->
       <div class="key-row">
-        <button class="key-btn" data-key="Enter" title="إدخال">⏎</button>
-        <button class="key-btn" data-key="Backspace" title="مسح">⌫</button>
-        <button class="key-btn" data-char=" " title="مسافة">___</button>
-        <button class="key-btn" data-char="." title="نقطة">.</button>
-        <button class="key-btn" data-char=":" title="نقطتان">:</button>
-        <button class="key-btn hide-keyboard" onclick="toggleMobileKeyboard()" title="إخفاء">✕</button>
+        <button class="key-btn special" onclick="toggleMobileKeyboard()" title="إخفاء لوحة المفاتيح" style="background: linear-gradient(135deg, #ff4444, #cc3333); flex: 1;">✕ إغلاق لوحة المفاتيح</button>
       </div>
     </div>
     
@@ -329,15 +520,85 @@
     }
     
     function updateFontSize() {
+      // Remove previous font size classes from body
       document.body.className = document.body.className.replace(/terminal-font-\w+/g, '');
       document.body.classList.add('terminal-font-' + currentFontSize);
       
-      // Trigger terminal resize if available
+      // Also apply to terminal container directly for better compatibility
+      const terminalContainer = document.getElementById('terminal-container');
+      if (terminalContainer) {
+        terminalContainer.className = terminalContainer.className.replace(/terminal-font-\w+/g, '');
+        terminalContainer.classList.add('terminal-font-' + currentFontSize);
+      }
+      
+      // Apply to .terminal class specifically
+      const terminalElements = document.querySelectorAll('.terminal');
+      terminalElements.forEach(el => {
+        el.className = el.className.replace(/terminal-font-\w+/g, '');
+        el.classList.add('terminal-font-' + currentFontSize);
+      });
+      
+      // Trigger terminal resize and refresh
       setTimeout(() => {
-        if (window.term && window.term.fit) {
-          window.term.fit();
+        if (window.term) {
+          if (window.term.fit) {
+            window.term.fit();
+          }
+          // Force terminal refresh
+          if (window.term.refresh) {
+            window.term.refresh(0, window.term.rows - 1);
+          }
+          // Trigger resize event
+          window.dispatchEvent(new Event('resize'));
         }
-      }, 100);
+      }, 150);
+      
+      // Show visual feedback
+      showFontSizeChange(currentFontSize);
+    }
+    
+    function showFontSizeChange(size) {
+      const sizeNames = {
+        'xs': 'صغير جداً',
+        'sm': 'صغير',
+        'md': 'متوسط',
+        'lg': 'كبير',
+        'xl': 'كبير جداً',
+        'xxl': 'ضخم'
+      };
+      
+      // Create or update size indicator
+      let indicator = document.getElementById('font-size-indicator');
+      if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'font-size-indicator';
+        indicator.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(0, 255, 136, 0.9);
+          color: #000;
+          padding: 15px 25px;
+          border-radius: 10px;
+          font-size: 16px;
+          font-weight: bold;
+          z-index: 9999;
+          pointer-events: none;
+          transition: all 0.3s ease;
+        `;
+        document.body.appendChild(indicator);
+      }
+      
+      indicator.textContent = `حجم الخط: ${sizeNames[size]}`;
+      indicator.style.opacity = '1';
+      indicator.style.transform = 'translate(-50%, -50%) scale(1)';
+      
+      // Hide after 2 seconds
+      setTimeout(() => {
+        indicator.style.opacity = '0';
+        indicator.style.transform = 'translate(-50%, -50%) scale(0.8)';
+      }, 2000);
     }
     
     // Handle keyboard visibility for better terminal sizing
@@ -454,6 +715,196 @@
         vibrate(10);
       }
     });
+    
+    // Arabic text processing function
+    function normalizeArabicText(text) {
+      if (!text) return text;
+      
+      // Basic Arabic text normalization
+      let normalized = text;
+      
+      // Handle Arabic diacritics and special characters
+      const arabicNormalization = {
+        'ﻷ': 'لا',
+        'ﻻ': 'لا',
+        'ﻹ': 'لإ',
+        'ﻱ': 'ي',
+        'ﻯ': 'ى',
+        'ﻩ': 'ه'
+      };
+      
+      Object.entries(arabicNormalization).forEach(([from, to]) => {
+        normalized = normalized.replace(new RegExp(from, 'g'), to);
+      });
+      
+      // Ensure proper UTF-8 encoding for Arabic
+      return normalized;
+    }
+    
+    // Android keyboard functionality
+    let usingAndroidKeyboard = false;
+    
+    function useAndroidKeyboard() {
+      const androidInput = document.getElementById('android-input');
+      
+      if (usingAndroidKeyboard) {
+        usingAndroidKeyboard = false;
+        androidInput.style.position = 'absolute';
+        androidInput.style.left = '-9999px';
+        androidInput.style.opacity = '0';
+        androidInput.style.pointerEvents = 'none';
+        androidInput.blur();
+        return;
+      }
+      
+      usingAndroidKeyboard = true;
+      
+      androidInput.style.position = 'fixed';
+      androidInput.style.bottom = '80px';
+      androidInput.style.left = '50%';
+      androidInput.style.transform = 'translateX(-50%)';
+      androidInput.style.opacity = '1';
+      androidInput.style.pointerEvents = 'auto';
+      androidInput.style.zIndex = '1500';
+      androidInput.style.width = '280px';
+      androidInput.style.height = '45px';
+      androidInput.style.background = 'rgba(0, 255, 136, 0.15)';
+      androidInput.style.border = '2px solid rgba(0, 255, 136, 0.6)';
+      androidInput.style.borderRadius = '12px';
+      androidInput.style.padding = '10px 15px';
+      androidInput.style.color = '#00ff88';
+      androidInput.style.textAlign = 'center';
+      androidInput.style.fontSize = '16px';
+      androidInput.style.fontFamily = 'monospace';
+      androidInput.style.direction = 'ltr';
+      androidInput.style.unicodeBidi = 'plaintext';
+      androidInput.placeholder = 'اكتب هنا...';
+      androidInput.value = '';
+      
+      // Enable better text composition for Arabic
+      androidInput.style.imeMode = 'active';
+      androidInput.style.compositionMode = 'auto';
+      
+      setTimeout(() => {
+        androidInput.focus();
+        androidInput.click();
+      }, 100);
+    }
+    
+    // Android keyboard input handling
+    document.addEventListener('DOMContentLoaded', function() {
+      const androidInput = document.getElementById('android-input');
+      let lastValue = '';
+      
+      androidInput.addEventListener('input', function(e) {
+        if (usingAndroidKeyboard && window.term) {
+          const value = e.target.value;
+          if (value !== lastValue) {
+            // Handle Arabic text properly - convert to proper encoding
+            let newChars = value.slice(lastValue.length);
+            
+            // Process Arabic characters and special handling
+            if (newChars) {
+              // Normalize Arabic text
+              newChars = normalizeArabicText(newChars);
+              
+              if (window.socket) {
+                window.socket.emit('data', newChars);
+              } else if (window.term) {
+                window.term.write(newChars);
+              }
+            }
+            lastValue = value;
+            
+            // Clear input when it gets too long
+            if (value.length > 50) {
+              setTimeout(() => {
+                e.target.value = '';
+                lastValue = '';
+              }, 100);
+            }
+          }
+        }
+      });
+      
+      // Handle composition events for better Arabic support
+      androidInput.addEventListener('compositionstart', function(e) {
+        if (usingAndroidKeyboard) {
+          // Disable regular input handling during composition
+          e.target.setAttribute('data-composing', 'true');
+        }
+      });
+      
+      androidInput.addEventListener('compositionend', function(e) {
+        if (usingAndroidKeyboard) {
+          e.target.removeAttribute('data-composing');
+          // Trigger input event manually after composition
+          e.target.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+      
+      androidInput.addEventListener('keydown', function(e) {
+        if (usingAndroidKeyboard) {
+          let key = null;
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            key = '\r';
+          } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            key = '\b';
+          } else if (e.key === 'Tab') {
+            e.preventDefault();
+            key = '\t';
+          }
+          
+          if (key) {
+            if (window.socket) {
+              window.socket.emit('data', key);
+            } else if (window.term) {
+              window.term.write(key);
+            }
+          }
+        }
+      });
+    });
+    
+    // Page exit warning to prevent losing SSH connection
+    let connectionActive = false;
+    
+    // Set connection as active when socket connects
+    window.addEventListener('DOMContentLoaded', function() {
+      // Wait for WebSocket connection
+      setTimeout(() => {
+        if (window.socket && window.socket.connected) {
+          connectionActive = true;
+        }
+      }, 2000);
+    });
+    
+    // Warning before page unload
+    window.addEventListener('beforeunload', function(e) {
+      if (connectionActive) {
+        const confirmationMessage = 'لديك اتصال SSH نشط. هل أنت متأكد من مغادرة الصفحة؟ ستفقد الاتصال وتحتاج للاتصال مرة أخرى.';
+        e.returnValue = confirmationMessage;
+        return confirmationMessage;
+      }
+    });
+    
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function(e) {
+      if (connectionActive) {
+        const userConfirm = confirm('لديك اتصال SSH نشط. هل أنت متأكد من العودة للصفحة السابقة؟\n\nستفقد الاتصال الحالي وتحتاج للاتصال مرة أخرى.');
+        if (!userConfirm) {
+          // Push current state back to prevent navigation
+          history.pushState(null, null, window.location.href);
+        } else {
+          connectionActive = false;
+        }
+      }
+    });
+    
+    // Initialize history state
+    history.pushState(null, null, window.location.href);
   </script>
   
 <script src="/ssh/webssh2.bundle.js" defer></script>

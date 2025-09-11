@@ -286,6 +286,12 @@
         const form = document.querySelector('form');
         const hostInput = document.querySelector('input[name="host"]');
         hostInput.value = '127.0.0.1';
+        form.action = `/ssh/host/${hostInput.value}`;
+
+        hostInput.addEventListener('input', () => {
+            const host = hostInput.value || '127.0.0.1';
+            form.action = `/ssh/host/${host}`;
+        });
         
         function toggleAdvanced() {
             const advancedOptions = document.getElementById('advancedOptions');
@@ -301,9 +307,6 @@
         }
         
         form.addEventListener('submit', (e) => {
-            const host = hostInput.value || '127.0.0.1';
-            form.action = `/ssh/host/${host}`;
-            
             // Add loading state to button
             const loginBtn = document.querySelector('.login-btn');
             loginBtn.innerHTML = '🔄 جاري الاتصال...';
