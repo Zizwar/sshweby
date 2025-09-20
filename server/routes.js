@@ -25,6 +25,25 @@ exports.reauth = function reauth(req, res) {
 };
 
 exports.connect = function connect(req, res) {
+  if (req.method === 'POST') {
+    let { host, port } = config.ssh;
+    if (
+      req.params?.host &&
+      (validator.isIP(`${req.params.host}`) ||
+        validator.isFQDN(req.params.host) ||
+        /^(([a-z]|[A-Z]|\d|[!^(){}\-_~])+)?\w$/.test(req.params.host))
+    ) {
+      host = req.params.host;
+    }
+    if (req.body.port && validator.isInt(`${req.body.port}`, { min: 1, max: 65535 })) {
+      port = req.body.port;
+    }
+    req.session.ssh = { ...config.ssh, host, port, ...req.body };
+    req.session.username = req.body.username;
+    req.session.userpassword = req.body.userpassword;
+    return res.redirect(req.originalUrl);
+  }
+
   res.sendFile(path.join(path.join(publicPath, 'client.htm')));
 
   let { host, port } = config.ssh;
@@ -51,53 +70,6 @@ exports.connect = function connect(req, res) {
     ) {
       host = req.params.host;
     }
-  }
-
-  if (req.method === 'POST' && req.body.username && req.body.userpassword) {
-    req.session.username = req.body.username;
-    req.session.userpassword = req.body.userpassword;
-
-    if (req.body.port && validator.isInt(`${req.body.port}`, { min: 1, max: 65535 }))
-      port = req.body.port;
-
-    if (req.body.header) header = req.body.header;
-
-    if (req.body.headerBackground) {
-      headerBackground = req.body.headerBackground;
-      console.log(`background: ${req.body.headerBackground}`);
-    }
-
-    if (req.body.sshterm && /^(([a-z]|[A-Z]|\d|[!^(){}\-_~])+)?\w$/.test(req.body.sshterm))
-      sshterm = req.body.sshterm;
-
-    if (req.body.cursorBlink && validator.isBoolean(`${req.body.cursorBlink}`))
-      cursorBlink = parseBool(req.body.cursorBlink);
-
-    if (req.body.scrollback && validator.isInt(`${req.body.scrollback}`, { min: 1, max: 200000 }))
-      scrollback = req.body.scrollback;
-
-    if (req.body.tabStopWidth && validator.isInt(`${req.body.tabStopWidth}`, { min: 1, max: 100 }))
-      tabStopWidth = req.body.tabStopWidth;
-
-    if (req.body.bellStyle && ['sound', 'none'].indexOf(req.body.bellStyle) > -1)
-      bellStyle = req.body.bellStyle;
-
-    if (
-      req.body.readyTimeout &&
-      validator.isInt(`${req.body.readyTimeout}`, { min: 1, max: 300000 })
-    )
-      readyTimeout = req.body.readyTimeout;
-
-    if (req.body.fontSize && validator.isNumeric(`${req.body.fontSize}`))
-      fontSize = req.body.fontSize;
-
-    if (req.body.fontFamily) fontFamily = req.body.fontFamily;
-
-    if (req.body.letterSpacing && validator.isNumeric(`${req.body.letterSpacing}`))
-      letterSpacing = req.body.letterSpacing;
-
-    if (req.body.lineHeight && validator.isNumeric(`${req.body.lineHeight}`))
-      lineHeight = req.body.lineHeight;
   }
 
   if (req.method === 'GET') {

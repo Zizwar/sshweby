@@ -1,289 +1,153 @@
-body, html  {
-  font-family: helvetica, sans-serif, arial;
-  font-size: 1em;
-  background-color: rgb(0, 0, 0);
-  color: rgb(240, 240, 240);
+
+:root {
+  --background: #1e1e1e;
+  --foreground: #d4d4d4;
+  --primary: #007acc;
+  --error: #f44747;
+  --header-bg: #252526;
+  --footer-bg: #252526;
+  --border-color: #333;
+  --button-bg: #333;
+  --button-hover-bg: #444;
+}
+
+body, html {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  background-color: var(--background);
+  color: var(--foreground);
   height: 100%;
   margin: 0;
+  overflow: hidden;
 }
-#header {
-    color: rgb(240, 240, 240);
-    background-color: rgb(0, 128, 0);
-    width: 100%;
-    border-color: white;
-    border-style: none none solid none;
-    border-width: 1px;
-    text-align: center;
-    flex: 0 1 auto;
-    z-index: 99;
-    height:19px;
-    display: none;
-}
+
 .box {
-    display: block;
-    height: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
+
+#toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+#font-controls, #quick-actions, #log-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.font-control-btn, .quick-action-btn {
+  background-color: var(--button-bg);
+  color: var(--foreground);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.font-control-btn:hover, .quick-action-btn:hover {
+  background-color: var(--button-hover-bg);
+}
+
 #terminal-container {
-    display: block;
-    width: calc(100% - 1px);
-    margin: 0 auto;
-    padding: 2px;
-    height: calc(100% - 19px);
-    overflow: hidden;
+  flex-grow: 1;
+  padding: 2px;
+  overflow: hidden;
 }
+
 #terminal-container .terminal {
-    background-color: #000000;
-    color: #fafafa;
-    padding: 2px;
-    height: calc(100% - 19px);
-    font-size: 14px;
-    line-height: 1.2;
-}
-
-/* Mobile font size classes */
-body.terminal-font-xs .terminal { font-size: 10px; }
-body.terminal-font-sm .terminal { font-size: 12px; }
-body.terminal-font-md .terminal { font-size: 14px; }
-body.terminal-font-lg .terminal { font-size: 16px; }
-body.terminal-font-xl .terminal { font-size: 18px; }
-body.terminal-font-xxl .terminal { font-size: 20px; }
-
-/* Adjust terminal height when mobile keyboard is visible */
-body.keyboard-visible #terminal-container {
-    height: calc(100% - 160px); /* Account for mobile keyboard height */
-}
-
-/* Mobile terminal optimizations */
-@media (max-width: 768px), (pointer: coarse) {
-    #terminal-container .terminal {
-        font-size: 12px;
-        line-height: 1.3;
-    }
-    
-    body.terminal-font-xs .terminal { font-size: 8px; }
-    body.terminal-font-sm .terminal { font-size: 10px; }
-    body.terminal-font-md .terminal { font-size: 12px; }
-    body.terminal-font-lg .terminal { font-size: 14px; }
-    body.terminal-font-xl .terminal { font-size: 16px; }
-    body.terminal-font-xxl .terminal { font-size: 18px; }
-}
-#terminal-container .terminal:focus .terminal-cursor {
-    background-color: #fafafa;
-}
-#bottomdiv {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    background-color: rgb(50, 50, 50);
-    border-color: white;
-    border-style: solid none none none;
-    border-width: 1px;
-    z-index: 99;
-    height: 19px;
-}
-#footer {
-    display: inline-block;
-    color: rgb(240, 240, 240);
-    background-color: rgb(50, 50, 50);
-    padding-left: 5px;
-    padding-right: 5px;
-    border-color: white;
-    border-style: none none none solid;
-    border-width: 1px;
-    text-align: left;
-}
-#status {
-    display: inline-block;
-    color: rgb(240, 240, 240);
-    background-color: rgb(50, 50, 50);
-    padding-left: 10px;
-    padding-right: 10px;
-    border-color: white;
-    border-style: none solid none solid;
-    border-width: 1px;
-    text-align: left;
-    z-index: 100;
-}
-#countdown {
-    display: none;
-    color: rgb(240, 240, 240);
-    background-color: rgb(50, 50, 50);
-    padding-left: 10px;
-    padding-right: 10px;
-    border-color: white;
-    border-style: none solid none solid;
-    border-width: 1px;
-    text-align: left;
-    z-index: 100;
-}
-#countdown.active {
-    display: inline-block;
-    animation: countdown infinite alternate 200ms;
-}
-@keyframes countdown {
-    from {
-        background-color: rgb(255, 255, 0);
-    }
-    to {
-        background-color: inherit;
-    }
-}
-#menu {
-    display: inline-block;
-    font-size: 16px;
-    color: rgb(255, 255, 255);
-    padding-left: 10px;
-    z-index: 100;
-}
-#menu:hover .dropup-content {
-    display: block;
-}
-#logBtn, #credentialsBtn, #reauthBtn {
-    color: #000;
-}
-
-.dropup {
-    position: relative;
-    display: inline-block;
-    cursor: pointer;
-}
-.dropup-content {
-  display: none;
-  position: absolute;
-  background-color: #f1f1f1;
-  font-size: 16px;
-  min-width: 160px;
-  bottom: 18px;
-  z-index: 101;
-}
-.dropup-content a {
-    color: #777;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
-}
-.dropup-content a:hover {
-    background-color: #ccc
-}
-.dropup:hover .dropup-content {
-    display: block;
-}
-.dropup:active .dropup-.content {
-    display: block;
-}
-.dropup:hover .dropbtn {
-    background-color: #3e8e41;
+  height: 100%;
 }
 
 #mobile-keys {
-    display: flex;
-    justify-content: space-around;
-    position: fixed;
-    bottom: 19px; /* height of bottomdiv */
-    width: 100%;
-    background-color: #333;
-    padding: 5px 0;
-    z-index: 100;
-}
-
-#mobile-keys button {
-    background-color: #555;
-    color: white;
-    border: 1px solid #777;
-    border-radius: 5px;
-    padding: 10px 15px;
-    font-size: 1em;
-    touch-action: manipulation; /* Prevent zoom on double tap */
-}
-
-#mobile-keys button.active {
-    background-color: #777;
-}
-
-/* Enhanced mobile keyboard styles */
-#mobile-keys {
-    background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
-    backdrop-filter: blur(15px);
-    border-top: 1px solid rgba(0, 255, 136, 0.3);
-    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.5);
+  background: var(--background);
+  padding: 8px;
+  border-top: 1px solid var(--border-color);
 }
 
 .key-row {
-    display: flex;
-    justify-content: space-around;
-    padding: 2px 0;
-    gap: 2px;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 4px;
 }
 
 .key-btn {
-    background: linear-gradient(135deg, #404040, #2a2a2a);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    min-width: 45px;
-    text-align: center;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
+  background-color: var(--button-bg);
+  color: var(--foreground);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 10px;
+  min-width: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.key-btn:active {
-    transform: translateY(1px);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-    background: linear-gradient(135deg, #505050, #3a3a3a);
+.key-btn:hover {
+  background-color: var(--button-hover-bg);
 }
 
 .key-btn.special {
-    background: linear-gradient(135deg, #00ff88, #00cc6a);
-    color: #000;
-    font-weight: 700;
-    border: 1px solid rgba(0, 255, 136, 0.5);
-}
-
-.key-btn.special:active {
-    background: linear-gradient(135deg, #00cc6a, #009955);
+  background-color: var(--primary);
+  color: white;
 }
 
 .key-btn.modifier.active {
-    background: linear-gradient(135deg, #ff6b35, #e55a2b);
-    color: #fff;
-    box-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
+  background-color: var(--primary);
+  color: white;
 }
 
-.key-btn.arrow {
-    background: linear-gradient(135deg, #4169e1, #3355cc);
-    color: #fff;
-    font-size: 1.1rem;
+#bottomdiv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background-color: var(--footer-bg);
+  border-top: 1px solid var(--border-color);
 }
 
-.key-btn.arrow:active {
-    background: linear-gradient(135deg, #3355cc, #2244aa);
+#footer {
+  color: var(--foreground);
 }
 
-.key-btn.hide-keyboard {
-    background: linear-gradient(135deg, #ff4444, #cc3333);
-    color: #fff;
+#status {
+  color: var(--foreground);
 }
 
-.key-btn.hide-keyboard:active {
-    background: linear-gradient(135deg, #cc3333, #aa2222);
+.dropup {
+  position: relative;
 }
 
-/* Responsive keyboard adjustments */
-@media (max-width: 480px) {
-    .key-btn {
-        padding: 6px 8px;
-        font-size: 0.8rem;
-        min-width: 40px;
-    }
-    
-    .key-row {
-        gap: 1px;
-    }
+.dropup-content {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background-color: var(--header-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 4px;
+  min-width: 160px;
+}
+
+.dropup:hover .dropup-content {
+  display: block;
+}
+
+.dropup-content a {
+  color: var(--foreground);
+  padding: 8px 12px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropup-content a:hover {
+  background-color: var(--button-hover-bg);
 }

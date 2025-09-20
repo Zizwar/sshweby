@@ -1,234 +1,175 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Terminal } from '@xterm/xterm';
-import { FitAddon } from '@xterm/addon-fit';
-import { library, dom } from '@fortawesome/fontawesome-svg-core';
-import { faBars, faClipboard, faDownload, faKey, faCog } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
+import { SettingsProvider, useSettings } from '../contexts/SettingsContext';
+import TerminalComponent, { TerminalHandle } from './terminal/TerminalComponent';
+import VirtualKeyboard from './terminal/VirtualKeyboard';
+import Toolbar from './terminal/Toolbar';
+import StatusBar from './terminal/StatusBar';
+import '../contexts/i18n';
 
-library.add(faBars, faClipboard, faDownload, faKey, faCog);
-dom.watch();
-
-const TerminalPage = () => {
-  const terminalRef = useRef(null);
-  const term = useRef<Terminal | null>(null);
-  const fitAddon = useRef(new FitAddon());
-  const socket = useRef<Socket | null>(null);
-
-  const [ctrlActive, setCtrlActive] = useState(false);
-  const [altActive, setAltActive] = useState(false);
-  const [fontSize, setFontSize] = useState(14);
+const TerminalPageContent = () => {
+  const { settings, updateSetting } = useSettings();
+  const { t } = useTranslation();
+  const [fontSize, setFontSize] = useState(settings.terminal.fontSize);
   const [sessionLogEnable, setSessionLogEnable] = useState(false);
   const [loggedData, setLoggedData] = useState(false);
   const [sessionLog, setSessionLog] = useState('');
   const [sessionFooter, setSessionFooter] = useState('');
   const [logDate, setLogDate] = useState<Date | null>(null);
-  const [allowReplay, setAllowReplay] = useState(false);
+  const [status, setStatus] = useState('');
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [allowReauth, setAllowReauth] = useState(false);
+  const [allowReplay, setAllowReplay] = useState(false);
+  const [showKeyboard, setShowKeyboard] = useState(settings.ui.virtualKeyboard);
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
+  const [websocketConnected, setWebsocketConnected] = useState(false);
+  const terminalRef = useRef<TerminalHandle>(null);
 
   useEffect(() => {
-    term.current = new Terminal({ fontSize });
-    (window as any).term = term.current;
+    const newSocket = io({ path: '/ssh/socket.io' });
+    setSocket(newSocket);
+    setWebsocketConnected(true);
 
-    term.current.loadAddon(fitAddon.current);
-    term.current.open(terminalRef.current!);
-    fitAddon.current.fit();
+    newSocket.on('connect', () => {
+      setWebsocketConnected(true);
+      setConnectionStatus('connected');
+      setIsConnected(true);
+    });
 
-    socket.current = io({ path: '/ssh/socket.io' });
-
-    const resizeScreen = () => {
-      fitAddon.current.fit();
-      socket.current!.emit('resize', { cols: term.current!.cols, rows: term.current!.rows });
-    };
-
-    window.addEventListener('resize', resizeScreen, false);
-
-    term.current.onData((data) => {
-      socket.current!.emit('data', data);
-      if (sessionLogEnable) {
-        setSessionLog(sessionLog + data);
+    newSocket.on('status', (data) => {
+      setStatus(data);
+      if (data.includes('SSH')) {
+        setIsConnected(true);
+        setConnectionStatus('connected');
       }
     });
 
-    socket.current.on('data', (data: string | Uint8Array) => {
-      term.current!.write(data);
+    newSocket.on('footer', (data) => setSessionFooter(data));
+
+    newSocket.on('ssherror', (data) => {
+      setStatus(data);
+      setIsConnected(false);
+      setConnectionStatus('error');
     });
 
-    socket.current.on('connect', () => {
-      socket.current!.emit('geometry', term.current!.cols, term.current!.rows);
+    newSocket.on('disconnect', (err) => {
+      setStatus(`WEBSOCKET SERVER DISCONNECTED: ${err}`);
+      setWebsocketConnected(false);
+      setIsConnected(false);
+      setConnectionStatus('disconnected');
+      newSocket.io.reconnection(false);
     });
 
-    socket.current.on('setTerminalOpts', (data) => {
-      term.current!.options = data;
+    newSocket.on('error', (err) => {
+      setStatus(`ERROR: ${err}`);
+      setConnectionStatus('error');
     });
 
-    socket.current.on('title', (data) => {
-      document.title = data;
-    });
-
-    socket.current.on('status', (data) => {
-      const status = document.getElementById('status');
-      if (status) status.innerHTML = data;
-    });
-
-    socket.current.on('ssherror', (data) => {
-      const status = document.getElementById('status');
-      if (status) {
-        status.innerHTML = data;
-        status.style.backgroundColor = 'red';
-      }
-    });
-
-    socket.current.on('headerBackground', (data) => {
-      const header = document.getElementById('header');
-      if (header) header.style.backgroundColor = data;
-    });
-
-    socket.current.on('header', (data) => {
-      const header = document.getElementById('header');
-      if (header && data) {
-        header.innerHTML = data;
-        header.style.display = 'block';
-        const terminalContainer = document.getElementById('terminal-container');
-        if (terminalContainer) terminalContainer.style.height = 'calc(100% - 38px)';
-        resizeScreen();
-      }
-    });
-
-    socket.current.on('footer', (data) => {
-      setSessionFooter(data);
-      const footer = document.getElementById('footer');
-      if (footer) footer.innerHTML = data;
-    });
-
-    socket.current.on('statusBackground', (data) => {
-      const status = document.getElementById('status');
-      if (status) status.style.backgroundColor = data;
-    });
-
-    socket.current.on('allowreplay', (data) => {
-      setAllowReplay(data);
-    });
-
-    socket.current.on('allowreauth', (data) => {
-      setAllowReauth(data);
-    });
-
-    socket.current.on('disconnect', (err) => {
-      const status = document.getElementById('status');
-      if (status) {
-        status.style.backgroundColor = 'red';
-        status.innerHTML = `WEBSOCKET SERVER DISCONNECTED: ${err}`;
-      }
-      socket.current!.io.reconnection(false);
-    });
-
-    socket.current.on('error', (err) => {
-      const status = document.getElementById('status');
-      if (status) {
-        status.style.backgroundColor = 'red';
-        status.innerHTML = `ERROR: ${err}`;
-      }
-    });
+    newSocket.on('allowreauth', (data) => setAllowReauth(data));
+    newSocket.on('allowreplay', (data) => setAllowReplay(data));
 
     return () => {
-      window.removeEventListener('resize', resizeScreen);
-      socket.current!.disconnect();
-      term.current!.dispose();
+      newSocket.disconnect();
     };
   }, []);
 
-  useEffect(() => {
-    if (term.current) {
-      term.current.options.fontSize = fontSize;
-      fitAddon.current.fit();
-    }
-  }, [fontSize]);
+  const handleKeyClick = useCallback((key: string, type = 'key') => {
+    if (!socket || !isConnected) return;
 
-  const handleKeyClick = (key: any) => {
-    if (!term.current || !socket.current) return;
+    let finalKey = key;
 
-    if (key.key) {
-      switch (key.key) {
-        case 'Escape':
-          socket.current.emit('data', '\x1b');
-          break;
-        case 'Tab':
-          socket.current.emit('data', '\t');
-          break;
-        case 'ArrowUp':
-          socket.current.emit('data', '\x1b[A');
-          break;
-        case 'ArrowDown':
-          socket.current.emit('data', '\x1b[B');
-          break;
-        case 'ArrowLeft':
-          socket.current.emit('data', '\x1b[D');
-          break;
-        case 'ArrowRight':
-          socket.current.emit('data', '\x1b[C');
-          break;
-        case 'Enter':
-          socket.current.emit('data', '\r');
-          break;
-        case 'Backspace':
-          socket.current.emit('data', '\b');
-          break;
-        case 'Control':
-          setCtrlActive(!ctrlActive);
-          setAltActive(false);
-          break;
-        case 'Alt':
-          setAltActive(!altActive);
-          setCtrlActive(false);
-          break;
-      }
-    } else if (key.char) {
-      let charToSend = key.char;
-      if (ctrlActive) {
-        switch (charToSend.toLowerCase()) {
-          case 'c':
-            socket.current.emit('data', '\x03');
-            break;
-          case 'a':
-            socket.current.emit('data', '\x01');
-            break;
-          case 'x':
-            socket.current.emit('data', '\x18');
-            break;
-          case 'v':
-            socket.current.emit('data', '\x16');
-            break;
-          case 'z':
-            socket.current.emit('data', '\x1a');
-            break;
-          case 'd':
-            socket.current.emit('data', '\x04');
-            break;
-          default:
-            socket.current.emit('data', charToSend);
+    switch (type) {
+      case 'key':
+        finalKey = key;
+        break;
+      case 'control':
+        // تحويل أوامر التحكم إلى أكواد ASCII
+        const controlCode = key.charCodeAt(0) - 64;
+        finalKey = String.fromCharCode(controlCode);
+        break;
+      case 'special':
+        // مفاتيح خاصة
+        switch (key) {
+          case 'ArrowUp': finalKey = '\x1b[A'; break;
+          case 'ArrowDown': finalKey = '\x1b[B'; break;
+          case 'ArrowRight': finalKey = '\x1b[C'; break;
+          case 'ArrowLeft': finalKey = '\x1b[D'; break;
+          case 'Home': finalKey = '\x1bOH'; break;
+          case 'End': finalKey = '\x1bOF'; break;
+          case 'PageUp': finalKey = '\x1b[5~'; break;
+          case 'PageDown': finalKey = '\x1b[6~'; break;
+          case 'Delete': finalKey = '\x1b[3~'; break;
+          case 'Tab': finalKey = '\t'; break;
+          case 'Enter': finalKey = '\r'; break;
+          case 'Escape': finalKey = '\x1b'; break;
+          case 'Backspace': finalKey = '\x7f'; break;
+          default: finalKey = key;
         }
-        setCtrlActive(false);
-      } else if (altActive) {
-        socket.current.emit('data', '\x1b' + charToSend);
-        setAltActive(false);
-      } else {
-        socket.current.emit('data', charToSend);
-      }
+        break;
     }
-    term.current.focus();
+
+    socket.emit('data', finalKey);
+  }, [socket, isConnected]);
+
+  const handleTitleChange = (title: string) => {
+    document.title = title;
+  };
+
+  // تحديث حجم الخط مع حفظ الإعدادات
+  const handleFontSizeChange = useCallback((newSize: number) => {
+    setFontSize(newSize);
+    updateSetting('terminal', 'fontSize', newSize);
+  }, [updateSetting]);
+
+  // تبديل عرض الكيبورد
+  const toggleKeyboard = useCallback(() => {
+    const newState = !showKeyboard;
+    setShowKeyboard(newState);
+    updateSetting('ui', 'virtualKeyboard', newState);
+  }, [showKeyboard, updateSetting]);
+
+  const toggleLog = () => {
+    if (sessionLogEnable) {
+      setSessionLogEnable(false);
+      setLoggedData(true);
+      const currentDate = new Date();
+      setSessionLog(
+        `${sessionLog}\r\n\r\nLog End for ${sessionFooter}: ${currentDate.toString()}\r\n`
+      );
+      setLogDate(currentDate);
+    } else {
+      setSessionLogEnable(true);
+      setLoggedData(true);
+      const currentDate = new Date();
+      setSessionLog(
+        `Log Start for ${sessionFooter}: ${currentDate.toString()}\r\n\r\n`
+      );
+      setLogDate(currentDate);
+    }
+  };
+
+  const downloadLog = () => {
+    if (loggedData && logDate) {
+      const myFile = `WebSSH2-${logDate.toISOString()}.log`;
+      const blob = new Blob([sessionLog], { type: 'text/plain' });
+      const elem = window.document.createElement('a');
+      elem.href = window.URL.createObjectURL(blob);
+      elem.download = myFile;
+      document.body.appendChild(elem);
+      elem.click();
+      document.body.removeChild(elem);
+    }
   };
 
   const sendCtrlC = () => {
-    if (term.current) {
-      term.current.write('\u0003');
-    }
-  };
+      terminalRef.current?.sendCtrlC();
+  }
 
   const clearScreen = () => {
-    if (term.current) {
-      term.current.write('\u000C');
-    }
-  };
+      terminalRef.current?.clearScreen();
+  }
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -239,10 +180,7 @@ const TerminalPage = () => {
   };
 
   const showConnectionInfo = () => {
-    const status = document.getElementById('status');
-    if (status) {
-      alert('Connection Info:\n' + status.textContent);
-    }
+    alert('Connection Info:\n' + status);
   };
 
   const useAndroidKeyboard = () => {
@@ -259,174 +197,99 @@ const TerminalPage = () => {
     }
   };
 
-  const toggleLog = () => {
-    if (sessionLogEnable) {
-      setSessionLogEnable(false);
-      setLoggedData(true);
-      const currentDate = new Date();
-      setSessionLog(
-        `${sessionLog}\r\n\r\nLog End for ${sessionFooter}: ${currentDate.getFullYear()}/${currentDate.getMonth() + 1}/${currentDate.getDate()} @ ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}\r\n`
-      );
-      setLogDate(currentDate);
-    } else {
-      setSessionLogEnable(true);
-      setLoggedData(true);
-      const currentDate = new Date();
-      setSessionLog(
-        `Log Start for ${sessionFooter}: ${currentDate.getFullYear()}/${currentDate.getMonth() + 1}/${currentDate.getDate()} @ ${currentDate.getHours()}:${currentDate.getMinutes()}:${currentDate.getSeconds()}\r\n\r\n`
-      );
-      setLogDate(currentDate);
-    }
-    term.current!.focus();
-  };
-
-  const downloadLog = () => {
-    if (loggedData) {
-      const myFile = `WebSSH2-${logDate!.getFullYear()}${logDate!.getMonth() + 1}${logDate!.getDate()}_${logDate!.getHours()}${logDate!.getMinutes()}${logDate!.getSeconds()}.log`;
-      const blob = new Blob([
-        sessionLog.replace(
-          // eslint-disable-next-line no-control-regex
-          /[\u001b\u009b][[\]()#;?]*(?:\d{1,4}(?:;\d{0,4})*)?[0-9A-ORZcf-nqry=><;]/g,
-          ''
-        ),
-      ], {
-        type: 'text/plain',
-      });
-      const elem = window.document.createElement('a');
-      elem.href = window.URL.createObjectURL(blob);
-      elem.download = myFile;
-      document.body.appendChild(elem);
-      elem.click();
-      document.body.removeChild(elem);
-    }
-    term.current!.focus();
-  };
-
   const reauthSession = () => {
-    socket.current!.emit('control', 'reauth');
+    socket!.emit('control', 'reauth');
     window.location.href = '/ssh/reauth';
   };
 
   const replayCredentials = () => {
-    socket.current!.emit('control', 'replayCredentials');
-    term.current!.focus();
+    socket!.emit('control', 'replayCredentials');
   };
 
-  const keyRows = [
-    [
-      { key: 'Escape', title: 'مفتاح الهروب', content: 'ESC', className: 'special' },
-      { key: 'Tab', title: 'جدولة', content: 'TAB', className: 'special' },
-      { key: 'Control', title: 'تحكم', content: 'CTRL', className: `special modifier ${ctrlActive ? 'active' : ''}` },
-      { key: 'Alt', title: 'بديل', content: 'ALT', className: `special modifier ${altActive ? 'active' : ''}` },
-      { key: 'Backspace', title: 'مسح', content: '⌫', className: 'special' },
-    ],
-    [
-      { char: '1' }, { char: '2' }, { char: '3' }, { char: '4' }, { char: '5' },
-      { char: '6' }, { char: '7' }, { char: '8' }, { char: '9' }, { char: '0' },
-    ],
-    [
-      { char: '`' }, { char: '@' }, { char: '#' }, { char: '$' }, { char: '%' },
-      { char: '&' }, { char: '*' }, { char: '!' },
-    ],
-    [
-      { char: '|' }, { char: '~' }, { char: '/' }, { char: '-' }, { char: '_' },
-      { char: '=' }, { char: '+' }, { char: '^' },
-    ],
-    [
-      { char: '(' }, { char: ')' }, { char: '[' }, { char: ']' }, { char: '{' },
-      { char: '}' }, { char: '"' }, { char: "'" },
-    ],
-    [
-      { char: '.' }, { char: ',' }, { char: ':' }, { char: ';' }, { char: '?' },
-      { char: '<' }, { char: '>' }, { char: '\\' },
-    ],
-    [
-      { key: 'ArrowUp', content: '↑', className: 'arrow' },
-      { key: 'ArrowDown', content: '↓', className: 'arrow' },
-      { key: 'ArrowLeft', content: '←', className: 'arrow' },
-      { key: 'ArrowRight', content: '→', className: 'arrow' },
-      { key: 'Enter', content: '⏎', className: 'special' },
-      { char: ' ', content: 'مسافة', className: 'wide' },
-    ],
-  ];
+  const terminalHeight = showKeyboard ? 'calc(100vh - 320px)' : 'calc(100vh - 120px)';
 
   return (
-    <div className="terminal-font-md">
-      <div className="box">
-        <div id="header"></div>
-        <div id="terminal-container" className="terminal" ref={terminalRef}></div>
+    <div className="terminal-container">
+      <input
+        type="text"
+        id="android-input"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck="false"
+        inputMode="text"
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          opacity: 0,
+          pointerEvents: 'none',
+          zIndex: -1
+        }}
+      />
 
-        <button id="keyboard-toggle" title="إظهار/إخفاء لوحة المفاتيح">⌨️</button>
+      <Toolbar
+        fontSize={fontSize}
+        setFontSize={handleFontSizeChange}
+        toggleLog={toggleLog}
+        downloadLog={downloadLog}
+        sessionLogEnable={sessionLogEnable}
+        loggedData={loggedData}
+        sendCtrlC={sendCtrlC}
+        clearScreen={clearScreen}
+        toggleFullscreen={toggleFullscreen}
+        showConnectionInfo={showConnectionInfo}
+        useAndroidKeyboard={useAndroidKeyboard}
+        showKeyboard={showKeyboard}
+        toggleKeyboard={toggleKeyboard}
+        isConnected={isConnected}
+        connectionStatus={connectionStatus}
+        websocketConnected={websocketConnected}
+      />
 
-        <div id="font-controls">
-          <button className="font-control-btn" title="تصغير النص" onClick={() => setFontSize(fontSize - 1)}>A-</button>
-          <button className="font-control-btn" title="تكبير النص" onClick={() => setFontSize(fontSize + 1)}>A+</button>
-          <button className="font-control-btn" title="إعادة تعيين النص" onClick={() => setFontSize(14)}>A</button>
-        </div>
-
-        <input type="text" id="android-input" autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false" inputMode="text" style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none', zIndex: -1 }} />
-
-        <div id="quick-actions">
-          <button className="quick-action-btn" title="لوحة مفاتيح الأندرويد" onClick={useAndroidKeyboard}>📱</button>
-          <button className="quick-action-btn" title="إلغاء العملية" onClick={sendCtrlC}>✕</button>
-          <button className="quick-action-btn" title="مسح الشاشة" onClick={clearScreen}>🧹</button>
-          <button className="quick-action-btn" title="ملء الشاشة" onClick={toggleFullscreen}>⛶</button>
-          <button className="quick-action-btn" title="معلومات الاتصال" onClick={showConnectionInfo}>ℹ️</button>
-        </div>
-
-        <div id="mobile-keys">
-          <div className="keyboard-label">⌨️ لوحة المفاتيح المخصصة</div>
-          {keyRows.map((row, rowIndex) => (
-            <div key={rowIndex} className="key-row">
-              {row.map((key, keyIndex) => (
-                <button
-                  key={keyIndex}
-                  className={`key-btn ${key.className || ''}`}
-                  data-key={key.key}
-                  data-char={key.char}
-                  title={key.title}
-                  onClick={() => handleKeyClick(key)}
-                >
-                  {key.content || key.char || key.key}
-                </button>
-              ))}
-            </div>
-          ))}
-          <div className="key-row">
-            <button className="key-btn special" style={{ background: 'linear-gradient(135deg, #ff4444, #cc3333)', flex: 1 }}>✕ إغلاق لوحة المفاتيح</button>
-          </div>
-        </div>
-
-        <div id="bottomdiv">
-          <div className="dropup" id="menu">
-            <i className="fas fa-bars fa-fw"></i> القائمة
-            <div id="dropupContent" className="dropup-content">
-              <a id="logBtn" onClick={toggleLog}>
-                <i className="fas fa-clipboard fa-fw"></i> {sessionLogEnable ? 'Stop Log' : 'Start Log'}
-              </a>
-              {loggedData && (
-                <a id="downloadLogBtn" onClick={downloadLog}>
-                  <i className="fas fa-download fa-fw"></i> تحميل السجل
-                </a>
-              )}
-              {allowReauth && (
-                <a id="reauthBtn" onClick={reauthSession}>
-                  <i className="fas fa-key fa-fw"></i> تغيير المستخدم
-                </a>
-              )}
-              {allowReplay && (
-                <a id="credentialsBtn" onClick={replayCredentials}>
-                  <i className="fas fa-key fa-fw"></i> بيانات الاعتماد
-                </a>
-              )}
-            </div>
-          </div>
-          <div id="footer"></div>
-          <div id="status"></div>
-          <div id="countdown"></div>
-        </div>
+      <div
+        className="terminal-viewport"
+        style={{
+          height: terminalHeight,
+          minHeight: '200px'
+        }}
+      >
+        <TerminalComponent
+          ref={terminalRef}
+          onTitleChange={handleTitleChange}
+          sessionLogEnable={sessionLogEnable}
+          setSessionLog={setSessionLog}
+          sessionLog={sessionLog}
+          fontSize={fontSize}
+        />
       </div>
+
+      {showKeyboard && (
+        <VirtualKeyboard
+          handleKeyClick={handleKeyClick}
+          isConnected={isConnected}
+        />
+      )}
+
+      <StatusBar
+        status={status}
+        footer={sessionFooter}
+        allowReauth={allowReauth}
+        allowReplay={allowReplay}
+        reauthSession={reauthSession}
+        replayCredentials={replayCredentials}
+        connectionStatus={connectionStatus}
+        isConnected={isConnected}
+        websocketConnected={websocketConnected}
+      />
     </div>
+  );
+};
+
+const TerminalPage = () => {
+  return (
+    <SettingsProvider>
+      <TerminalPageContent />
+    </SettingsProvider>
   );
 };
 
