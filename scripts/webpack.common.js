@@ -11,7 +11,7 @@ module.exports = {
     extensions: ['', '.webpack.js', '.web.js', '.ts', '.tsx', '.js'],
   },
   entry: {
-    webssh2: './client/src/js/index.ts',
+    webssh2: './client/src/js/app.tsx',
   },
   plugins: [
     new CleanWebpackPlugin(),
