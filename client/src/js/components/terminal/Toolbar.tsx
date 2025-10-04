@@ -43,55 +43,43 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
   return (
     <div className="terminal-toolbar">
-      {/* مؤشر الحالة - أولاً للأهمية */}
-      <div className="connection-status-mobile">
-        <span className={`status-dot ${connectionStatus}`}>
-          {!websocketConnected && '🔴'}
-          {websocketConnected && isConnected && '🟢'}
-          {websocketConnected && !isConnected && '🟡'}
-        </span>
-      </div>
-
-      {/* الأزرار الأساسية فقط */}
+      {/* الأزرار الأساسية - أيقونات فقط */}
       <div className="primary-controls">
         <button
-          className={`control-btn-large keyboard-btn ${showKeyboard ? 'active' : ''}`}
+          className={`control-btn-icon keyboard-btn ${showKeyboard ? 'active' : ''}`}
           onClick={toggleKeyboard}
           title={t('toggle_keyboard')}
         >
-          <span className="btn-icon">⌨️</span>
-          <span className="btn-label">{showKeyboard ? t('hide_keyboard') : t('show_keyboard')}</span>
+          ⌨️
         </button>
 
         <button
-          className="control-btn-large interrupt-btn"
+          className="control-btn-icon interrupt-btn"
           onClick={sendCtrlC}
           title={t('interrupt')}
           disabled={!isConnected}
         >
-          <span className="btn-icon">⏹️</span>
-          <span className="btn-label">Ctrl+C</span>
+          ⏹️
         </button>
 
         <button
-          className="control-btn-large clear-btn"
+          className="control-btn-icon clear-btn"
           onClick={clearScreen}
           title={t('clear_terminal')}
           disabled={!isConnected}
         >
-          <span className="btn-icon">🗑️</span>
-          <span className="btn-label">{t('clear')}</span>
+          🗑️
         </button>
       </div>
 
       {/* زر القائمة */}
       <div className="menu-wrapper">
         <button
-          className="control-btn-large menu-btn"
+          className="control-btn-icon menu-btn"
           onClick={() => setShowMenu(!showMenu)}
           title={t('more_options')}
         >
-          <span className="btn-icon">⋮</span>
+          ⋮
         </button>
 
         {/* القائمة المنبثقة */}
@@ -99,6 +87,21 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <>
             <div className="menu-overlay" onClick={() => setShowMenu(false)} />
             <div className="dropdown-menu">
+              {/* حالة الاتصال */}
+              <div className="menu-status">
+                <span className={`status-indicator ${connectionStatus}`}>
+                  {!websocketConnected && '🔴'}
+                  {websocketConnected && isConnected && '🟢'}
+                  {websocketConnected && !isConnected && '🟡'}
+                </span>
+                <span className="status-text">
+                  {websocketConnected && isConnected && t('connected')}
+                  {websocketConnected && !isConnected && t('connecting')}
+                  {!websocketConnected && t('disconnected')}
+                </span>
+              </div>
+              <div className="menu-divider" />
+
               <button
                 className="menu-item"
                 onClick={() => {

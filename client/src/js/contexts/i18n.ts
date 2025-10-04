@@ -35,6 +35,12 @@ const resources = {
       fullscreen: 'Toggle Fullscreen',
       connection_info: 'Connection Info',
       android_keyboard: 'Use Android Keyboard',
+      type_command: 'Type your command...',
+      press_enter_send: 'Press Enter to send',
+      press_esc_close: 'Esc to close',
+      show_keyboard: 'Show Keyboard',
+      hide_keyboard: 'Hide Keyboard',
+      more_options: 'More Options',
 
       // Status
       connected: 'Connected',
@@ -94,6 +100,12 @@ const resources = {
       fullscreen: 'ملء الشاشة',
       connection_info: 'معلومات الاتصال',
       android_keyboard: 'استخدام لوحة مفاتيح أندرويد',
+      type_command: 'اكتب الأمر...',
+      press_enter_send: 'Enter للإرسال',
+      press_esc_close: 'Esc للإغلاق',
+      show_keyboard: 'إظهار لوحة المفاتيح',
+      hide_keyboard: 'إخفاء لوحة المفاتيح',
+      more_options: 'خيارات أكثر',
 
       // Status
       connected: 'متصل',

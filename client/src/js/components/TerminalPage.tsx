@@ -239,15 +239,37 @@ const TerminalPageContent = () => {
 
   const useAndroidKeyboard = () => {
     const androidInput = document.getElementById('android-input') as HTMLInputElement;
-    if (androidInput) {
-      androidInput.style.position = 'fixed';
-      androidInput.style.bottom = '80px';
-      androidInput.style.left = '50%';
-      androidInput.style.transform = 'translateX(-50%)';
-      androidInput.style.opacity = '1';
-      androidInput.style.pointerEvents = 'auto';
-      androidInput.style.zIndex = '1500';
+    const androidContainer = document.getElementById('android-keyboard-container');
+
+    if (androidInput && androidContainer) {
+      androidContainer.style.display = 'flex';
       androidInput.focus();
+    }
+  };
+
+  const hideAndroidKeyboard = () => {
+    const androidContainer = document.getElementById('android-keyboard-container');
+    if (androidContainer) {
+      androidContainer.style.display = 'none';
+    }
+  };
+
+  const sendAndroidInput = () => {
+    const androidInput = document.getElementById('android-input') as HTMLInputElement;
+    if (androidInput && androidInput.value && socket.current) {
+      socket.current.emit('data', androidInput.value);
+      androidInput.value = '';
+      hideAndroidKeyboard();
+    }
+  };
+
+  const handleAndroidKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendAndroidInput();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      hideAndroidKeyboard();
     }
   };
 
@@ -271,22 +293,87 @@ const TerminalPageContent = () => {
       backgroundColor: '#1e1e1e',
       overflow: 'hidden'
     }}>
-      <input
-        type="text"
-        id="android-input"
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck="false"
-        inputMode="text"
+      {/* Android Keyboard Input Container */}
+      <div
+        id="android-keyboard-container"
         style={{
-          position: 'absolute',
-          left: '-9999px',
-          opacity: 0,
-          pointerEvents: 'none',
-          zIndex: -1
+          display: 'none',
+          position: 'fixed',
+          bottom: '70px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '90%',
+          maxWidth: '500px',
+          backgroundColor: '#2d2d2d',
+          borderRadius: '8px',
+          padding: '10px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+          zIndex: 1500,
+          flexDirection: 'column',
+          gap: '6px'
         }}
-      />
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input
+            type="text"
+            id="android-input"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            inputMode="text"
+            onKeyDown={handleAndroidKeyDown}
+            placeholder={t('type_command')}
+            style={{
+              flex: 1,
+              padding: '10px 12px',
+              fontSize: '16px',
+              backgroundColor: '#1e1e1e',
+              color: '#fff',
+              border: '1px solid #444',
+              borderRadius: '4px',
+              outline: 'none'
+            }}
+          />
+          <button
+            onClick={sendAndroidInput}
+            style={{
+              padding: '10px 16px',
+              fontSize: '16px',
+              backgroundColor: '#0066cc',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            ↵
+          </button>
+          <button
+            onClick={hideAndroidKeyboard}
+            style={{
+              padding: '10px 12px',
+              fontSize: '16px',
+              backgroundColor: '#d32f2f',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            ✕
+          </button>
+        </div>
+        <div style={{
+          fontSize: '12px',
+          color: '#999',
+          textAlign: 'center'
+        }}>
+          {t('press_enter_send')} • {t('press_esc_close')}
+        </div>
+      </div>
 
       <Toolbar
         fontSize={fontSize}
