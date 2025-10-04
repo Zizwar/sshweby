@@ -58,7 +58,9 @@ body, html {
 #terminal-container {
   flex-grow: 1;
   padding: 2px;
-  overflow: hidden;
+  min-height: 0; /* Allows the container to shrink properly in a flex context */
+  display: flex;
+  flex-direction: column;
 }
 
 #terminal-container .terminal {

@@ -301,17 +301,21 @@
 
 @media (max-width: 480px) {
   .terminal-toolbar {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
   }
 
   .terminal-controls,
   .log-controls {
     justify-content: center;
+    flex-basis: 100%;
   }
 
   .connection-status {
     justify-content: center;
+    flex-basis: 100%;
   }
 
   .status-bar {

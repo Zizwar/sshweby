@@ -1,0 +1,607 @@
+/* Mobile Optimized Styles - تصميم محسّن للهواتف */
+
+/* ====================
+   TERMINAL CONTAINER
+   ==================== */
+
+.terminal-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #1e1e1e;
+}
+
+.terminal-viewport {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: #1e1e1e;
+}
+
+#terminal-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.terminal {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden;
+}
+
+/* ====================
+   TOOLBAR MOBILE STYLES
+   ==================== */
+
+.terminal-toolbar {
+  background: linear-gradient(145deg, #2d2d30, #252528);
+  border-bottom: 1px solid #3e3e42;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  min-height: 60px;
+}
+
+.connection-status-mobile {
+  display: flex;
+  align-items: center;
+}
+
+.status-dot {
+  font-size: 20px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-dot.connected {
+  animation: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.primary-controls {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.control-btn-large {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
+  min-height: 52px;
+  min-width: 70px;
+  background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.control-btn-large .btn-icon {
+  font-size: 20px;
+}
+
+.control-btn-large .btn-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.control-btn-large:active {
+  transform: translateY(2px) scale(0.95);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.control-btn-large:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: linear-gradient(145deg, #333, #2a2a2a);
+}
+
+.keyboard-btn.active {
+  background: linear-gradient(145deg, #f39c12, #e67e22);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+}
+
+.interrupt-btn {
+  background: linear-gradient(145deg, #e74c3c, #c0392b);
+  box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
+}
+
+.interrupt-btn:active {
+  background: linear-gradient(145deg, #c0392b, #a93226);
+}
+
+.clear-btn {
+  background: linear-gradient(145deg, #3498db, #2980b9);
+  box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+}
+
+.clear-btn:active {
+  background: linear-gradient(145deg, #2980b9, #21618c);
+}
+
+/* Menu Dropdown */
+.menu-wrapper {
+  position: relative;
+}
+
+.menu-btn {
+  min-width: 50px;
+  background: linear-gradient(145deg, #555, #444);
+}
+
+.menu-btn .btn-icon {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: linear-gradient(145deg, #333, #2a2a2a);
+  border: 1px solid #3e3e42;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  min-width: 220px;
+  max-width: 280px;
+  overflow: hidden;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: none;
+  color: white;
+  border: none;
+  text-align: right;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:active {
+  background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+}
+
+.menu-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.menu-item .menu-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.menu-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #555, transparent);
+  margin: 4px 0;
+}
+
+/* ====================
+   COMPACT KEYBOARD
+   ==================== */
+
+.virtual-keyboard-compact {
+  background: linear-gradient(145deg, #2d2d30, #252528);
+  border-top: 2px solid #3e3e42;
+  padding: 12px;
+  max-height: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  animation: slideUpFade 0.3s ease;
+}
+
+/* Scrollbar للكيبورد */
+.virtual-keyboard-compact::-webkit-scrollbar {
+  width: 6px;
+}
+
+.virtual-keyboard-compact::-webkit-scrollbar-track {
+  background: #2a2a2a;
+  border-radius: 3px;
+}
+
+.virtual-keyboard-compact::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.virtual-keyboard-compact::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Quick Commands Row */
+.quick-commands {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.quick-cmd-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  min-height: 55px;
+  background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.quick-cmd-btn .cmd-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.quick-cmd-btn .cmd-desc {
+  font-size: 9px;
+  opacity: 0.8;
+}
+
+.quick-cmd-btn.danger {
+  background: linear-gradient(145deg, #e74c3c, #c0392b);
+  box-shadow: 0 3px 8px rgba(231, 76, 60, 0.3);
+}
+
+.quick-cmd-btn.info {
+  background: linear-gradient(145deg, #3498db, #2980b9);
+  box-shadow: 0 3px 8px rgba(52, 152, 219, 0.3);
+}
+
+.quick-cmd-btn.warning {
+  background: linear-gradient(145deg, #f39c12, #e67e22);
+  box-shadow: 0 3px 8px rgba(243, 156, 18, 0.3);
+}
+
+.quick-cmd-btn.secondary {
+  background: linear-gradient(145deg, #95a5a6, #7f8c8d);
+  box-shadow: 0 3px 8px rgba(149, 165, 166, 0.3);
+}
+
+.quick-cmd-btn:active,
+.quick-cmd-btn.active-feedback {
+  transform: translateY(2px) scale(0.95);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.quick-cmd-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Navigation Pad */
+.navigation-pad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+  background: linear-gradient(145deg, #333, #2a2a2a);
+  border-radius: 12px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.nav-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-key {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-key:active,
+.nav-key.active-feedback {
+  transform: translateY(3px) scale(0.95);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(145deg, #5a5a5a, #4a4a4a);
+}
+
+.nav-key:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: linear-gradient(145deg, #333, #2a2a2a);
+}
+
+/* Special Keys Row */
+.special-keys-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.special-key {
+  padding: 12px 8px;
+  min-height: 48px;
+  background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.special-key.esc {
+  background: linear-gradient(145deg, #e74c3c, #c0392b);
+}
+
+.special-key.tab {
+  background: linear-gradient(145deg, #3498db, #2980b9);
+}
+
+.special-key.enter {
+  background: linear-gradient(145deg, #27ae60, #229954);
+}
+
+.special-key.backspace {
+  background: linear-gradient(145deg, #f39c12, #e67e22);
+}
+
+.special-key:active,
+.special-key.active-feedback {
+  transform: translateY(2px) scale(0.95);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.special-key:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Space Row */
+.space-row {
+  display: flex;
+  justify-content: center;
+}
+
+.space-key-compact {
+  flex: 1;
+  max-width: 100%;
+  padding: 12px 16px;
+  min-height: 48px;
+  background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.space-key-compact:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.space-key-compact:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ====================
+   RESPONSIVE ADJUSTMENTS
+   ==================== */
+
+@media (max-width: 480px) {
+  .terminal-toolbar {
+    padding: 8px;
+    min-height: 55px;
+  }
+
+  .control-btn-large {
+    min-height: 48px;
+    min-width: 65px;
+    padding: 6px 10px;
+  }
+
+  .control-btn-large .btn-icon {
+    font-size: 18px;
+  }
+
+  .control-btn-large .btn-label {
+    font-size: 8px;
+  }
+
+  .virtual-keyboard-compact {
+    padding: 10px;
+    max-height: 260px;
+  }
+
+  .nav-key {
+    width: 55px;
+    height: 55px;
+    font-size: 22px;
+  }
+
+  .quick-cmd-btn {
+    min-height: 50px;
+    padding: 8px 4px;
+  }
+
+  .quick-cmd-btn .cmd-label {
+    font-size: 10px;
+  }
+
+  .quick-cmd-btn .cmd-desc {
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .primary-controls {
+    gap: 6px;
+  }
+
+  .control-btn-large {
+    min-width: 60px;
+    min-height: 45px;
+  }
+
+  .nav-key {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .quick-commands {
+    gap: 6px;
+  }
+}
+
+/* ====================
+   LANDSCAPE MODE
+   ==================== */
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .terminal-toolbar {
+    min-height: 50px;
+    padding: 6px 10px;
+  }
+
+  .control-btn-large {
+    min-height: 42px;
+    min-width: 60px;
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .control-btn-large .btn-label {
+    display: none;
+  }
+
+  .virtual-keyboard-compact {
+    max-height: 180px;
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .nav-key {
+    width: 45px;
+    height: 45px;
+    font-size: 18px;
+  }
+
+  .quick-cmd-btn {
+    min-height: 42px;
+  }
+
+  .special-key {
+    min-height: 40px;
+    font-size: 10px;
+  }
+}

@@ -7,6 +7,8 @@ import TerminalPage from './components/TerminalPage';
 import '../css/style.css';
 import '../css/virtual-keyboard.css';
 import '../css/terminal-ui.css';
+import '../css/theme-selector.css';
+import '../css/mobile-optimized.css';
 import '@xterm/xterm/css/xterm.css';
 
 // Import i18n

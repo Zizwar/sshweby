@@ -56,7 +56,10 @@ const resources = {
       replay_credentials: 'Replay Credentials',
 
       // Options
-      options: 'Options'
+      options: 'Options',
+
+      // Theme
+      select_theme: 'Select Theme'
     }
   },
   ar: {
@@ -112,7 +115,10 @@ const resources = {
       replay_credentials: 'إعادة بيانات الاعتماد',
 
       // Options
-      options: 'خيارات'
+      options: 'خيارات',
+
+      // Theme
+      select_theme: 'اختيار النمط'
     }
   }
 };

@@ -171,6 +171,10 @@ const TerminalPageContent = () => {
       terminalRef.current?.clearScreen();
   }
 
+  const handleThemeChange = (theme: any) => {
+    terminalRef.current?.setTheme(theme);
+  }
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen();
@@ -206,7 +210,8 @@ const TerminalPageContent = () => {
     socket!.emit('control', 'replayCredentials');
   };
 
-  const terminalHeight = showKeyboard ? 'calc(100vh - 320px)' : 'calc(100vh - 120px)';
+  // تحسين حساب ارتفاع الترمنال مع الكيبورد المبسط
+  const terminalHeight = showKeyboard ? 'calc(100vh - 350px)' : 'calc(100vh - 80px)';
 
   return (
     <div className="terminal-container">
@@ -267,6 +272,7 @@ const TerminalPageContent = () => {
         <VirtualKeyboard
           handleKeyClick={handleKeyClick}
           isConnected={isConnected}
+          terminalHandle={terminalRef}
         />
       )}
 
