@@ -30,6 +30,8 @@ const TerminalPageContent = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [websocketConnected, setWebsocketConnected] = useState(false);
+  const [wakeLockEnabled, setWakeLockEnabled] = useState(false);
+  const wakeLockRef = useRef<any>(null);
 
   // إنشاء التيرمينال مرة واحدة فقط
   useEffect(() => {
@@ -282,6 +284,31 @@ const TerminalPageContent = () => {
     socket.current?.emit('control', 'replayCredentials');
   };
 
+  // Wake Lock - منع الشاشة من النوم
+  const toggleWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        if (wakeLockEnabled && wakeLockRef.current) {
+          await wakeLockRef.current.release();
+          wakeLockRef.current = null;
+          setWakeLockEnabled(false);
+        } else {
+          wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+          setWakeLockEnabled(true);
+
+          // إعادة تفعيل Wake Lock عند العودة للصفحة
+          wakeLockRef.current.addEventListener('release', () => {
+            setWakeLockEnabled(false);
+          });
+        }
+      } else {
+        alert(t('wake_lock_not_supported'));
+      }
+    } catch (err) {
+      console.error('Wake Lock error:', err);
+    }
+  };
+
   const terminalHeight = showKeyboard ? 'calc(100vh - 350px)' : 'calc(100vh - 80px)';
 
   return (
@@ -375,6 +402,25 @@ const TerminalPageContent = () => {
         </div>
       </div>
 
+      <div
+        ref={terminalRef}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          padding: '10px',
+          paddingBottom: '70px',
+          backgroundColor: '#282A36'
+        }}
+      />
+
+      {showKeyboard && (
+        <VirtualKeyboard
+          handleKeyClick={handleKeyClick}
+          isConnected={isConnected}
+          terminalHandle={{ current: null }}
+        />
+      )}
+
       <Toolbar
         fontSize={fontSize}
         setFontSize={handleFontSizeChange}
@@ -392,36 +438,8 @@ const TerminalPageContent = () => {
         isConnected={isConnected}
         connectionStatus={connectionStatus}
         websocketConnected={websocketConnected}
-      />
-
-      <div
-        ref={terminalRef}
-        style={{
-          flex: 1,
-          minHeight: 0,
-          padding: '10px',
-          backgroundColor: '#282A36'
-        }}
-      />
-
-      {showKeyboard && (
-        <VirtualKeyboard
-          handleKeyClick={handleKeyClick}
-          isConnected={isConnected}
-          terminalHandle={{ current: null }}
-        />
-      )}
-
-      <StatusBar
-        status={status}
-        footer={sessionFooter}
-        allowReauth={allowReauth}
-        allowReplay={allowReplay}
-        reauthSession={reauthSession}
-        replayCredentials={replayCredentials}
-        connectionStatus={connectionStatus}
-        isConnected={isConnected}
-        websocketConnected={websocketConnected}
+        wakeLockEnabled={wakeLockEnabled}
+        toggleWakeLock={toggleWakeLock}
       />
     </div>
   );

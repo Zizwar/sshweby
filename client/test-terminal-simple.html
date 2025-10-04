@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار حاوية التيرمينال</title>
+    <link rel="stylesheet" href="node_modules/@xterm/xterm/css/xterm.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #252526;
+            padding: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        /* هذه هي الحاوية المهمة - يجب أن تكون موجودة في CSS */
+        .terminal-viewport {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+            background: #282a36;
+        }
+
+        /* الحاوية الفعلية للتيرمينال */
+        .terminal {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .footer {
+            background: #252526;
+            padding: 10px;
+            border-top: 1px solid #333;
+        }
+
+        .status {
+            color: #50fa7b;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h3>اختبار التيرمينال البسيط</h3>
+    </div>
+
+    <!-- الحاوية الأساسية - نفس البنية في React -->
+    <div class="terminal-viewport">
+        <div id="terminal" class="terminal"></div>
+    </div>
+
+    <div class="footer">
+        <span class="status">● متصل</span>
+        <span> | الحالة: جاهز</span>
+    </div>
+
+    <script src="node_modules/@xterm/xterm/lib/xterm.js"></script>
+    <script src="node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+    <script src="node_modules/socket.io-client/dist/socket.io.min.js"></script>
+
+    <script>
+        // إنشاء التيرمينال
+        const term = new Terminal({
+            cursorBlink: true,
+            fontSize: 14,
+            fontFamily: 'monospace',
+            theme: {
+                background: '#282A36',
+                foreground: '#F8F8F2'
+            }
+        });
+
+        // FitAddon للتحجيم التلقائي
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+
+        // فتح التيرمينال في الحاوية
+        term.open(document.getElementById('terminal'));
+        fitAddon.fit();
+
+        // اتصال Socket.IO
+        const socket = io({ path: '/ssh/socket.io' });
+
+        socket.on('connect', () => {
+            console.log('✅ متصل بالسيرفر');
+            term.writeln('✅ متصل بنجاح!');
+        });
+
+        socket.on('data', (data) => {
+            term.write(data);
+        });
+
+        term.onData((data) => {
+            socket.emit('data', data);
+        });
+
+        // تحجيم تلقائي عند تغيير حجم النافذة
+        window.addEventListener('resize', () => {
+            fitAddon.fit();
+            socket.emit('resize', {
+                cols: term.cols,
+                rows: term.rows
+            });
+        });
+
+        socket.on('disconnect', () => {
+            console.log('❌ انقطع الاتصال');
+            term.writeln('\r\n❌ انقطع الاتصال بالسيرفر');
+        });
+    </script>
+</body>
+</html>

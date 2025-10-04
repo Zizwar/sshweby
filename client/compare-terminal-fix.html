@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مقارنة: قبل وبعد إصلاح الحاوية</title>
+    <link rel="stylesheet" href="node_modules/@xterm/xterm/css/xterm.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: Arial, sans-serif;
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .comparison-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #252526;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .wrong {
+            border-color: #f44747;
+        }
+
+        .correct {
+            border-color: #50fa7b;
+        }
+
+        .wrong .header {
+            background: #f44747;
+            color: white;
+        }
+
+        .correct .header {
+            background: #50fa7b;
+            color: black;
+        }
+
+        /* ❌ الحالة الخاطئة - بدون CSS للحاوية */
+        .terminal-viewport-wrong {
+            /* لا يوجد CSS - المشكلة هنا! */
+            height: 400px;
+        }
+
+        /* ✅ الحالة الصحيحة - مع CSS المناسب */
+        .terminal-viewport-correct {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+            background: #282a36;
+        }
+
+        .terminal {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .footer {
+            background: #252526;
+            padding: 10px;
+            border-top: 1px solid #333;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .explanation {
+            padding: 10px;
+            background: #2d2d30;
+            border-top: 1px solid #333;
+        }
+
+        .explanation h4 {
+            color: #ffcc00;
+            margin-bottom: 5px;
+        }
+
+        .explanation code {
+            background: #1e1e1e;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #ff79c6;
+        }
+    </style>
+</head>
+<body>
+    <!-- الحالة الخاطئة -->
+    <div class="comparison-box wrong">
+        <div class="header">❌ قبل الإصلاح (خطأ)</div>
+
+        <div class="terminal-viewport-wrong">
+            <div id="terminal-wrong" class="terminal"></div>
+        </div>
+
+        <div class="explanation">
+            <h4>المشكلة:</h4>
+            <p>الحاوية <code>.terminal-viewport</code> بدون CSS</p>
+            <p>❌ لا يوجد <code>display: flex</code></p>
+            <p>❌ لا يوجد <code>flex-direction: column</code></p>
+            <p>❌ التيرمينال لا يظهر بشكل صحيح</p>
+        </div>
+
+        <div class="footer">الحاوية غير مرئية أو مقطوعة</div>
+    </div>
+
+    <!-- الحالة الصحيحة -->
+    <div class="comparison-box correct">
+        <div class="header">✅ بعد الإصلاح (صحيح)</div>
+
+        <div class="terminal-viewport-correct">
+            <div id="terminal-correct" class="terminal"></div>
+        </div>
+
+        <div class="explanation">
+            <h4>الحل:</h4>
+            <p>إضافة CSS للحاوية <code>.terminal-viewport</code></p>
+            <p>✅ <code>display: flex</code></p>
+            <p>✅ <code>flex-direction: column</code></p>
+            <p>✅ <code>flex: 1</code> للتوسع الكامل</p>
+            <p>✅ <code>min-height: 0</code> للتحجيم الصحيح</p>
+        </div>
+
+        <div class="footer">الحاوية تعمل بشكل مثالي!</div>
+    </div>
+
+    <script src="node_modules/@xterm/xterm/lib/xterm.js"></script>
+    <script src="node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+
+    <script>
+        // التيرمينال الخاطئ
+        const termWrong = new Terminal({
+            fontSize: 14,
+            theme: { background: '#282A36', foreground: '#F8F8F2' }
+        });
+        const fitWrong = new FitAddon.FitAddon();
+        termWrong.loadAddon(fitWrong);
+        termWrong.open(document.getElementById('terminal-wrong'));
+        fitWrong.fit();
+        termWrong.writeln('❌ هذا التيرمينال قد لا يظهر بشكل صحيح');
+        termWrong.writeln('السبب: الحاوية بدون CSS مناسب');
+
+        // التيرمينال الصحيح
+        const termCorrect = new Terminal({
+            fontSize: 14,
+            theme: { background: '#282A36', foreground: '#F8F8F2' }
+        });
+        const fitCorrect = new FitAddon.FitAddon();
+        termCorrect.loadAddon(fitCorrect);
+        termCorrect.open(document.getElementById('terminal-correct'));
+        fitCorrect.fit();
+        termCorrect.writeln('✅ هذا التيرمينال يعمل بشكل مثالي!');
+        termCorrect.writeln('السبب: الحاوية مع CSS صحيح:');
+        termCorrect.writeln('  - display: flex');
+        termCorrect.writeln('  - flex-direction: column');
+        termCorrect.writeln('  - flex: 1');
+        termCorrect.writeln('  - min-height: 0');
+
+        // تحجيم تلقائي عند تغيير الحجم
+        window.addEventListener('resize', () => {
+            fitWrong.fit();
+            fitCorrect.fit();
+        });
+    </script>
+</body>
+</html>

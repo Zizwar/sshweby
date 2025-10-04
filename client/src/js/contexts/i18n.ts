@@ -41,6 +41,9 @@ const resources = {
       show_keyboard: 'Show Keyboard',
       hide_keyboard: 'Hide Keyboard',
       more_options: 'More Options',
+      enable_wake_lock: 'Keep Screen Awake',
+      disable_wake_lock: 'Allow Screen Sleep',
+      wake_lock_not_supported: 'Wake Lock is not supported on this device',
 
       // Status
       connected: 'Connected',
@@ -106,6 +109,9 @@ const resources = {
       show_keyboard: 'إظهار لوحة المفاتيح',
       hide_keyboard: 'إخفاء لوحة المفاتيح',
       more_options: 'خيارات أكثر',
+      enable_wake_lock: 'إبقاء الشاشة مضاءة',
+      disable_wake_lock: 'السماح بإطفاء الشاشة',
+      wake_lock_not_supported: 'خاصية إبقاء الشاشة مضاءة غير مدعومة على هذا الجهاز',
 
       // Status
       connected: 'متصل',

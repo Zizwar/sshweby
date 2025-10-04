@@ -21,6 +21,8 @@ interface ToolbarProps {
   connectionStatus?: string;
   websocketConnected?: boolean;
   onThemeChange?: (theme: any) => void;
+  wakeLockEnabled?: boolean;
+  toggleWakeLock?: () => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -28,7 +30,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
     toggleLog, downloadLog, sessionLogEnable, loggedData,
     sendCtrlC, clearScreen, toggleFullscreen, showConnectionInfo, useAndroidKeyboard,
     showKeyboard, toggleKeyboard, isConnected = true, connectionStatus = 'connected', websocketConnected = true,
-    onThemeChange
+    onThemeChange, wakeLockEnabled = false, toggleWakeLock
 }) => {
   const { t } = useTranslation();
   const { settings } = useSettings();
@@ -145,6 +147,18 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 <span className="menu-icon">📱</span>
                 {t('android_keyboard')}
               </button>
+              {toggleWakeLock && (
+                <button
+                  className="menu-item"
+                  onClick={() => {
+                    toggleWakeLock();
+                    setShowMenu(false);
+                  }}
+                >
+                  <span className="menu-icon">{wakeLockEnabled ? '🔓' : '🔒'}</span>
+                  {wakeLockEnabled ? t('disable_wake_lock') : t('enable_wake_lock')}
+                </button>
+              )}
               <div className="menu-divider" />
               <button
                 className="menu-item"
