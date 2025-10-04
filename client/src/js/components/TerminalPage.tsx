@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { Terminal } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
 import { useTranslation } from 'react-i18next';
 import { SettingsProvider, useSettings } from '../contexts/SettingsContext';
-import TerminalComponent, { TerminalHandle } from './terminal/TerminalComponent';
 import VirtualKeyboard from './terminal/VirtualKeyboard';
 import Toolbar from './terminal/Toolbar';
 import StatusBar from './terminal/StatusBar';
@@ -11,6 +12,11 @@ import '../contexts/i18n';
 const TerminalPageContent = () => {
   const { settings, updateSetting } = useSettings();
   const { t } = useTranslation();
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const term = useRef<Terminal | null>(null);
+  const fitAddon = useRef(new FitAddon());
+  const socket = useRef<Socket | null>(null);
+
   const [fontSize, setFontSize] = useState(settings.terminal.fontSize);
   const [sessionLogEnable, setSessionLogEnable] = useState(false);
   const [loggedData, setLoggedData] = useState(false);
@@ -18,27 +24,49 @@ const TerminalPageContent = () => {
   const [sessionFooter, setSessionFooter] = useState('');
   const [logDate, setLogDate] = useState<Date | null>(null);
   const [status, setStatus] = useState('');
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [allowReauth, setAllowReauth] = useState(false);
   const [allowReplay, setAllowReplay] = useState(false);
   const [showKeyboard, setShowKeyboard] = useState(settings.ui.virtualKeyboard);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [websocketConnected, setWebsocketConnected] = useState(false);
-  const terminalRef = useRef<TerminalHandle>(null);
 
+  // إنشاء التيرمينال مرة واحدة فقط
   useEffect(() => {
-    const newSocket = io({ path: '/ssh/socket.io' });
-    setSocket(newSocket);
-    setWebsocketConnected(true);
+    if (!terminalRef.current) return;
 
-    newSocket.on('connect', () => {
+    term.current = new Terminal({
+      cursorBlink: true,
+      fontSize: fontSize,
+      fontFamily: 'monospace',
+      theme: {
+        background: '#282A36',
+        foreground: '#F8F8F2',
+        cursor: '#F8F8F0'
+      },
+      cols: 80,
+      rows: 24
+    });
+
+    fitAddon.current = new FitAddon();
+    term.current.loadAddon(fitAddon.current);
+    term.current.open(terminalRef.current);
+    fitAddon.current.fit();
+
+    socket.current = io({ path: '/ssh/socket.io' });
+
+    socket.current.on('connect', () => {
+      console.log('✅ متصل بالسيرفر');
       setWebsocketConnected(true);
       setConnectionStatus('connected');
       setIsConnected(true);
     });
 
-    newSocket.on('status', (data) => {
+    socket.current.on('data', (data) => {
+      term.current?.write(data);
+    });
+
+    socket.current.on('status', (data) => {
       setStatus(data);
       if (data.includes('SSH')) {
         setIsConnected(true);
@@ -46,37 +74,71 @@ const TerminalPageContent = () => {
       }
     });
 
-    newSocket.on('footer', (data) => setSessionFooter(data));
+    socket.current.on('footer', (data) => setSessionFooter(data));
 
-    newSocket.on('ssherror', (data) => {
+    socket.current.on('ssherror', (data) => {
       setStatus(data);
       setIsConnected(false);
       setConnectionStatus('error');
     });
 
-    newSocket.on('disconnect', (err) => {
+    socket.current.on('disconnect', (err) => {
+      console.log('❌ انقطع الاتصال');
       setStatus(`WEBSOCKET SERVER DISCONNECTED: ${err}`);
       setWebsocketConnected(false);
       setIsConnected(false);
       setConnectionStatus('disconnected');
-      newSocket.io.reconnection(false);
     });
 
-    newSocket.on('error', (err) => {
+    socket.current.on('error', (err) => {
       setStatus(`ERROR: ${err}`);
       setConnectionStatus('error');
     });
 
-    newSocket.on('allowreauth', (data) => setAllowReauth(data));
-    newSocket.on('allowreplay', (data) => setAllowReplay(data));
+    socket.current.on('allowreauth', (data) => setAllowReauth(data));
+    socket.current.on('allowreplay', (data) => setAllowReplay(data));
+
+    term.current.onData((data) => {
+      socket.current?.emit('data', data);
+    });
+
+    const handleResize = () => {
+      if (term.current && fitAddon.current && socket.current) {
+        fitAddon.current.fit();
+        socket.current.emit('resize', {
+          cols: term.current.cols,
+          rows: term.current.rows
+        });
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
 
     return () => {
-      newSocket.disconnect();
+      window.removeEventListener('resize', handleResize);
+      socket.current?.disconnect();
+      term.current?.dispose();
     };
   }, []);
 
+  // تحديث حجم الخط فقط
+  useEffect(() => {
+    if (term.current && fitAddon.current) {
+      term.current.options.fontSize = fontSize;
+      setTimeout(() => {
+        fitAddon.current.fit();
+        if (socket.current) {
+          socket.current.emit('resize', {
+            cols: term.current!.cols,
+            rows: term.current!.rows
+          });
+        }
+      }, 50);
+    }
+  }, [fontSize]);
+
   const handleKeyClick = useCallback((key: string, type = 'key') => {
-    if (!socket || !isConnected) return;
+    if (!socket.current || !isConnected) return;
 
     let finalKey = key;
 
@@ -85,12 +147,10 @@ const TerminalPageContent = () => {
         finalKey = key;
         break;
       case 'control':
-        // تحويل أوامر التحكم إلى أكواد ASCII
         const controlCode = key.charCodeAt(0) - 64;
         finalKey = String.fromCharCode(controlCode);
         break;
       case 'special':
-        // مفاتيح خاصة
         switch (key) {
           case 'ArrowUp': finalKey = '\x1b[A'; break;
           case 'ArrowDown': finalKey = '\x1b[B'; break;
@@ -110,20 +170,14 @@ const TerminalPageContent = () => {
         break;
     }
 
-    socket.emit('data', finalKey);
-  }, [socket, isConnected]);
+    socket.current.emit('data', finalKey);
+  }, [isConnected]);
 
-  const handleTitleChange = (title: string) => {
-    document.title = title;
-  };
-
-  // تحديث حجم الخط مع حفظ الإعدادات
   const handleFontSizeChange = useCallback((newSize: number) => {
     setFontSize(newSize);
     updateSetting('terminal', 'fontSize', newSize);
   }, [updateSetting]);
 
-  // تبديل عرض الكيبورد
   const toggleKeyboard = useCallback(() => {
     const newState = !showKeyboard;
     setShowKeyboard(newState);
@@ -135,17 +189,13 @@ const TerminalPageContent = () => {
       setSessionLogEnable(false);
       setLoggedData(true);
       const currentDate = new Date();
-      setSessionLog(
-        `${sessionLog}\r\n\r\nLog End for ${sessionFooter}: ${currentDate.toString()}\r\n`
-      );
+      setSessionLog(`${sessionLog}\r\n\r\nLog End for ${sessionFooter}: ${currentDate.toString()}\r\n`);
       setLogDate(currentDate);
     } else {
       setSessionLogEnable(true);
       setLoggedData(true);
       const currentDate = new Date();
-      setSessionLog(
-        `Log Start for ${sessionFooter}: ${currentDate.toString()}\r\n\r\n`
-      );
+      setSessionLog(`Log Start for ${sessionFooter}: ${currentDate.toString()}\r\n\r\n`);
       setLogDate(currentDate);
     }
   };
@@ -164,16 +214,16 @@ const TerminalPageContent = () => {
   };
 
   const sendCtrlC = () => {
-      terminalRef.current?.sendCtrlC();
-  }
+    if (term.current) {
+      term.current.write('\u0003');
+    }
+  };
 
   const clearScreen = () => {
-      terminalRef.current?.clearScreen();
-  }
-
-  const handleThemeChange = (theme: any) => {
-    terminalRef.current?.setTheme(theme);
-  }
+    if (term.current) {
+      term.current.write('\u000C');
+    }
+  };
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -202,19 +252,25 @@ const TerminalPageContent = () => {
   };
 
   const reauthSession = () => {
-    socket!.emit('control', 'reauth');
+    socket.current?.emit('control', 'reauth');
     window.location.href = '/ssh/reauth';
   };
 
   const replayCredentials = () => {
-    socket!.emit('control', 'replayCredentials');
+    socket.current?.emit('control', 'replayCredentials');
   };
 
-  // تحسين حساب ارتفاع الترمنال مع الكيبورد المبسط
   const terminalHeight = showKeyboard ? 'calc(100vh - 350px)' : 'calc(100vh - 80px)';
 
   return (
-    <div className="terminal-container">
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      width: '100vw',
+      backgroundColor: '#1e1e1e',
+      overflow: 'hidden'
+    }}>
       <input
         type="text"
         id="android-input"
@@ -252,27 +308,20 @@ const TerminalPageContent = () => {
       />
 
       <div
-        className="terminal-viewport"
+        ref={terminalRef}
         style={{
-          height: terminalHeight,
-          minHeight: '200px'
+          flex: 1,
+          minHeight: 0,
+          padding: '10px',
+          backgroundColor: '#282A36'
         }}
-      >
-        <TerminalComponent
-          ref={terminalRef}
-          onTitleChange={handleTitleChange}
-          sessionLogEnable={sessionLogEnable}
-          setSessionLog={setSessionLog}
-          sessionLog={sessionLog}
-          fontSize={fontSize}
-        />
-      </div>
+      />
 
       {showKeyboard && (
         <VirtualKeyboard
           handleKeyClick={handleKeyClick}
           isConnected={isConnected}
-          terminalHandle={terminalRef}
+          terminalHandle={{ current: null }}
         />
       )}
 

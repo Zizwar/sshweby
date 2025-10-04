@@ -249,9 +249,19 @@ const TerminalComponent = forwardRef<TerminalHandle, TerminalComponentProps>(({ 
       socket.current?.disconnect();
       term.current?.dispose();
     };
-  }, [sessionLogEnable, sessionLog, setSessionLog, onTitleChange, fontSize]);
+  }, []); // ✅ فقط مرة واحدة عند التحميل!
 
-  return <div id="terminal-container" className="terminal" ref={terminalRef}></div>;
+  return (
+    <div
+      className="terminal"
+      ref={terminalRef}
+      style={{
+        width: '100%',
+        height: '100%',
+        minHeight: 0
+      }}
+    ></div>
+  );
 });
 
 export default TerminalComponent;
